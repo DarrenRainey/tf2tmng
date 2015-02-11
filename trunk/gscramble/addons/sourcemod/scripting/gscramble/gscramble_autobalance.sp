@@ -389,6 +389,9 @@ stock bool:IsOkToBalance()
 				return false;
 			}
 		}
+		new Float:fProgress = GetConVarFloat(cvar_ProgressDisable);
+		if (fProgress > 0 && g_fEscortProgress >= fProgress)
+			return false;
 		
 		return true;
 	}
