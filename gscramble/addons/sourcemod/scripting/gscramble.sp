@@ -125,7 +125,8 @@ new Handle:cvar_Version				= INVALID_HANDLE,
 	Handle:cvar_AbHumanOnly			= INVALID_HANDLE,
 	Handle:cvar_LockTeamsFullRound  	= INVALID_HANDLE,
 	Handle:cvar_SelectSpectators 		= INVALID_HANDLE,
-	Handle:cvar_OneScramblePerRound 		= INVALID_HANDLE;
+	Handle:cvar_OneScramblePerRound 		= INVALID_HANDLE,
+	Handle:cvar_ProgressDisable		=INVALID_HANDLE;
 
 new Handle:g_hAdminMenu 			= INVALID_HANDLE,
 	Handle:g_hScrambleVoteMenu 		= INVALID_HANDLE,
@@ -185,7 +186,8 @@ new bool:g_bScrambleNextRound = false,
 	/**
 	overrides the auto scramble check
 	*/
-	bool:g_bScrambleOverride;  // allows for the scramble check to be blocked by admin
+	bool:g_bScrambleOverride,  // allows for the scramble check to be blocked by admin
+	Float:g_fEscortProgress;
 
 new g_iTeamIds[2] = {TEAM_RED, TEAM_BLUE};
 
@@ -325,7 +327,8 @@ public OnPluginStart()
 	cvar_BalanceActionDelay = CreateConVar("gs_ab_actiondelay",		"5", 	"Time, in seconds after an imbalance is detected in which an imbalance is flagged, and possible swapping can occur", FCVAR_PLUGIN, true, 0.0, false);
 	cvar_ForceBalanceTrigger = CreateConVar("gs_ab_forcetrigger",	"4",	"If teams become imbalanced by this many players, auto-force a balance", FCVAR_PLUGIN, true, 0.0, false);
 	cvar_BalanceTimeLimit	= 	CreateConVar("gs_ab_timelimit", "0", 		"If there are this many seconds, or less, remaining in a round, stop auto-balacing", FCVAR_PLUGIN, true, 0.0, false);
-	cvar_AbHumanOnly = CreateConVar("gs_ab_humanonly", "0", "Only auto-balance human players", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	cvar_AbHumanOnly 		= CreateConVar("gs_ab_humanonly", "0", "Only auto-balance human players", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	cvar_ProgressDisable	=	CreateConVar("gs_ab_cartprogress_disable", ".90", "If the cart has reached this percentage of progress, then disable auto-balance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	
 	cvar_ImbalancePrevent	= CreateConVar("gs_prevent_spec_imbalance", "0", "If set, block changes to spectate that result in a team imbalance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BuddySystem		= CreateConVar("gs_use_buddy_system", "0", "Allow players to choose buddies to try to keep them on the same team", FCVAR_PLUGIN, true, 0.0, true, 1.0);
@@ -1143,6 +1146,7 @@ hook()
 	HookEvent("teamplay_point_captured", 	hook_PointCaptured, EventHookMode_Post);
 	HookEvent("object_destroyed", 			hook_ObjectDestroyed, EventHookMode_Post);
 	HookEvent("teamplay_flag_event",		hook_FlagEvent, EventHookMode_Post);
+	HookEvent("escort_progress",			hook_EscortProgress, EventHookMode_Post);
 	HookUserMessage(GetUserMessageId("TextMsg"), UserMessageHook_Class, false);
 	AddGameLogHook(LogHook);
 	
@@ -1150,7 +1154,7 @@ hook()
 	HookEvent("player_chargedeployed", hook_UberDeploy, EventHookMode_Post);
 	HookEvent("player_sapped_object", hook_Sapper, EventHookMode_Post);
 	HookEvent("medic_death", hook_MedicDeath, EventHookMode_Post);
-	HookEvent("player_escort_score", hook_EscortScore, EventHookMode_Post);	
+	HookEvent("controlpoint_endtouch", hook_EndTouch, EventHookMode_Post);	
 	HookEvent("teamplay_timer_time_added", TimerUpdateAdd, EventHookMode_Post);
 	g_bHooked = true;
 }
@@ -1185,8 +1189,9 @@ unHook()
 	UnhookEvent("player_chargedeployed", hook_UberDeploy, EventHookMode_Post);
 	UnhookEvent("player_sapped_object", hook_Sapper, EventHookMode_Post);
 	UnhookEvent("medic_death", hook_MedicDeath, EventHookMode_Post);
-	UnhookEvent("player_escort_score", hook_EscortScore, EventHookMode_Post);
+	UnhookEvent("controlpoint_endtouch", hook_EndTouch, EventHookMode_Post);
 	UnhookEvent("teamplay_timer_time_added", TimerUpdateAdd, EventHookMode_Post);
+	UnhookEvent("escort_progress",			hook_EscortProgress, EventHookMode_Post);
 
 	g_bHooked = false;
 }
@@ -1202,7 +1207,7 @@ public hook_MedicDeath(Handle:event, const String:name[], bool:dontBroadcast)
 	}
 }
 
-public hook_EscortScore(Handle:event, const String:name[], bool:dontBroadcast)
+public hook_EndTouch(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (g_iTeamworkProtection && g_RoundState == normal)
 	{
@@ -1305,6 +1310,11 @@ public hook_FlagEvent(Handle:event, const String:name[], bool:dontBroadcast)
 	}	
 	
 	AddTeamworkTime(GetEventInt(event, "player"));
+}
+
+public Action:hook_EscortProgress(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	g_fEscortProgress = GetEventFloat(event, "progress");
 }
 
 public Action:Event_PlayerTeam_Pre(Handle:event, const String:name[], bool:dontBroadcast)
@@ -1614,6 +1624,7 @@ public OnMapStart()
 	g_iVotes = 0;
 	PrecacheSound(SCRAMBLE_SOUND, true);
 	PrecacheSound(EVEN_SOUND, true);
+	g_fEscortProgress = 0.0;
 	
 	if (g_hBalanceFlagTimer != INVALID_HANDLE)
 	{
@@ -2329,6 +2340,7 @@ public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 	g_bRedCapped = false;
 	g_bBluCapped = false;
 	g_bScrambledThisRound = false;
+	g_fEscortProgress = 0.0;
 }
 
 public Action:hook_Setup(Handle:event, const String:name[], bool:dontBroadcast)
