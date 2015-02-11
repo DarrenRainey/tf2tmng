@@ -2538,6 +2538,10 @@ bool:IsValidTarget(client, e_ImmunityModes:mode)
 	if (mode == scramble)
 	{
 		iImmunity = e_Protection:GetConVarInt(cvar_ScrambleImmuneMode); // living plyers are not immune from scramble
+		if (iImmunity == none)
+		{
+			return true;
+		}
 		GetConVarString(cvar_ScrambleAdmFlags, flags, sizeof(flags));
 	}
 	else

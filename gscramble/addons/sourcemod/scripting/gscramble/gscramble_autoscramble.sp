@@ -520,8 +520,11 @@ stock DoRandomSort(array[], count)
 			iBluValidCount++;
 		}
 	}
-	iRedSelections = RoundToFloor(FloatDiv(FloatMul(fSelections, (float(iRedCount) + float(iBluCount))), 2.0));
+	iRedSelections = RoundToCeil(FloatMul(fSelections, (float(iRedCount) + float(iBluCount))));
 	iBluSelections = iRedSelections;
+	iBluSelections /= 2;
+	iRedSelections /= 2;
+
 	
 	if ((iTeamDiff = RoundFloat(FloatAbs(FloatSub(float(iRedCount),float(iBluCount))))) >= 2)
 	{
