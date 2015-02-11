@@ -51,7 +51,7 @@ comment these 2 lines if you want to compile without them.
 #endif
 #define REQUIRE_PLUGIN
 
-#define VERSION "3.0.20"
+#define VERSION "3.0.21"
 #define TEAM_RED 2
 #define TEAM_BLUE 3
 #define SCRAMBLE_SOUND  "vo/announcer_am_teamscramble03.wav"
@@ -362,7 +362,7 @@ public OnPluginStart()
 	cvar_VoteDelaySuccess	= CreateConVar("gs_vote_delay2",		"300",		"Time in seconds after a successful scramble in which players can vote again.", FCVAR_PLUGIN, true, 0.0, false);
 	cvar_AdminBlockVote		= CreateConVar("gs_vote_adminblock",		"0",		"If set, publicly started votes are disabled when an admin is preset.", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	
-	cvar_MinPlayers 		= CreateConVar("gs_vote_minplayers",	"6", 		"Minimum poeple connected before any voting will work.", FCVAR_PLUGIN, true, 0.0, false);
+	cvar_MinPlayers 		= CreateConVar("gs_vote_minplayers",	"1", 		"Minimum poeple connected before any voting will work.", FCVAR_PLUGIN, true, 0.0, false);
 	
 	cvar_AutoScrambleWinStreak			= CreateConVar("gs_winstreak",		"0", 		"If set, it will scramble after a team wins X full rounds in a row", FCVAR_PLUGIN, true, 0.0, false);
 	cvar_AutoScrambleRoundCount				= CreateConVar("gs_scramblerounds", "0",		"If set, it will scramble every X full round", FCVAR_PLUGIN, true, 0.0, false, 1.0);
@@ -2092,21 +2092,21 @@ public Handler_VoteCallback(Handle:menu, MenuAction:action, param1, param2)
 	
 	if (action == MenuAction_VoteEnd)
 	{	
-		new m_votes, totalVotes;		
-		GetMenuVoteInfo(param2, m_votes, totalVotes);
+		new i_winningVotes, i_totalVotes;		
+		GetMenuVoteInfo(param2, i_winningVotes, i_totalVotes);
 		
 		if (param1 == 1)
 		{
-			m_votes = totalVotes - m_votes;
+			i_winningVotes = i_totalVotes - i_winningVotes;
 		}
 		
-		new Float:comp = FloatDiv(float(m_votes),float(totalVotes));
+		new Float:comp = FloatDiv(float(i_winningVotes),float(i_totalVotes));
 		new Float:comp2 = GetConVarFloat(cvar_Needed);
 		
 		if (comp >= comp2)
 		{
-			PrintToChatAll("\x01\x04[SM]\x01 %t", "VoteWin", RoundToNearest(comp*100), totalVotes);	
-			LogAction(-1 , 0, "%T", "VoteWin", LANG_SERVER, RoundToNearest(comp*100), totalVotes);	
+			PrintToChatAll("\x01\x04[SM]\x01 %t", "VoteWin", RoundToNearest(comp*100), i_totalVotes);	
+			LogAction(-1 , 0, "%T", "VoteWin", LANG_SERVER, RoundToNearest(comp*100), i_totalVotes);	
 			
 			if (g_bScrambleAfterVote)
 			{
@@ -2124,8 +2124,8 @@ public Handler_VoteCallback(Handle:menu, MenuAction:action, param1, param2)
 		else
 		{
 			new against = 100 - RoundToNearest(comp*100);
-			PrintToChatAll("\x01\x04[SM]\x01 %t", "VoteFailed", against, totalVotes);
-			LogAction(-1 , 0, "%T", "VoteFailed", LANG_SERVER, against, totalVotes);
+			PrintToChatAll("\x01\x04[SM]\x01 %t", "VoteFailed", against, i_totalVotes);
+			LogAction(-1 , 0, "%T", "VoteFailed", LANG_SERVER, against, i_totalVotes);
 		}
 	}
 }
