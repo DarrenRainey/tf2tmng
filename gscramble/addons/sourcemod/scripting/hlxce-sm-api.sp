@@ -271,7 +271,7 @@ GetClientHLXPlayerId(client)
 	if (IsClientInGame(client) && IsClientConnected(client) && !IsFakeClient(client))
 	{
 		decl String:szAuthId[32];
-		if (GetClientAuthString(client, szAuthId, sizeof(szAuthId)))
+		if (GetClientAuthId(client, AuthId_Steam2, szAuthId, sizeof(szAuthId)))
 		{
 			decl String:szAuthIdEsc[49];
 			new iAuthIdLen;
@@ -310,7 +310,7 @@ public OnGotClientHLXPlayerId(Handle:owner, Handle:hndl, const String:error[], a
 	
 	if (SQL_GetRowCount(hndl) < 1)
 	{
-		ThrowNativeError(100, "Player %N not found in HLXCE database", client);
+		ThrowError("Player %N not found in HLXCE database", client);
 	}
 	
 	#if DEBUG == 1

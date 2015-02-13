@@ -28,7 +28,7 @@ $Date$
 $LastChangedBy$
 $LastChangedDate$
 $URL$
-$Copyright: (c) Tf2Tmng 2009-2011$
+$Copyright: (c) Tf2Tmng 2009-201$
 *************************************************************************
 *************************************************************************
 */
@@ -604,7 +604,7 @@ stock DoRandomSort(array[], count)
 stock SelectRandom(arr[][], size, numSelectsToMake) 
 { 
 	new temp[size], deselected;	 
-	while(numSelectsToMake-- > 0) 
+	while(--numSelectsToMake > 0) 
 	{ 
 		deselected = 0; 
 		for(new i = 0; i < size; i++)
