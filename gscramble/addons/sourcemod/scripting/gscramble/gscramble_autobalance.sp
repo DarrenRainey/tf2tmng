@@ -164,27 +164,42 @@ CheckBalance(bool:post=false)
 {
 	if (!g_bHooked)
 	{
+		#if defined DEBUG
+		LogToFile("gscramble.debug", "Ending checkbalance because not hooked");
+		#endif
 		return;
 	}
 	
 	if (g_hCheckTimer != INVALID_HANDLE)
 	{
+		#if defined DEBUG
+		LogToFile("gscramble.debug", "Ending checkbalance because checktimer running");
+		#endif
 		return;
 	}
 	
 	if (!g_bAutoBalance)
 	{
+		#if defined DEBUG
+		LogToFile("gscramble.debug", "Ending checkbalance because ab flag set false");
+		#endif
 		return;
 	}
 	
 	if (g_bBlockDeath)
 	{
+		#if defined DEBUG
+		LogToFile("gscramble.debug", "Ending checkbalance because scramble black death running");
+		#endif
 		return;
 	}
 		
 	if (post)
 	{
 		g_hCheckTimer = CreateTimer(0.1, timer_CheckBalance);
+		#if defined DEBUG
+		LogToFile("gscramble.debug", "running checkbalance timer");
+		#endif
 		return;
 	}
 	if (TeamsUnbalanced())
@@ -382,16 +397,28 @@ stock bool:IsOkToBalance()
 	{
 		new iBalanceTimeLimit = GetConVarInt(cvar_BalanceTimeLimit);
 		
-		if (iBalanceTimeLimit && g_iRoundTimer)
+		if (iBalanceTimeLimit && g_bRoundIsTimed)
 		{
-			if (g_iRoundTimer < iBalanceTimeLimit)
+			if ((g_fRoundEndTime - GetGameTime()) < float(iBalanceTimeLimit))
 			{
+			#if defined DEBUG
+			LogToFile("gscramble.debug.txt", "disabling due to balance time");
+			#endif
 				return false;
 			}
 		}
+		/*
 		new Float:fProgress = GetConVarFloat(cvar_ProgressDisable);
+		#if defined DEBUG
+		LogToFile("gscramble.debug.txt", "Progress = %f", g_fEscortProgress);
+		#endif
 		if (fProgress > 0 && g_fEscortProgress >= fProgress)
+		{
+			#if defined DEBUG
+			LogToFile("gscramble.debug.txt", "disabling due to cart progress");
+			#endif
 			return false;
+		}*/
 		
 		return true;
 	}
@@ -399,21 +426,33 @@ stock bool:IsOkToBalance()
 	{
 		case suddenDeath:
 		{
+			#if defined DEBUG
+			LogToFile("gscramble.debug.txt", "disabling due to roundstate suddendeath");
+			#endif
 			return false;
 		}
 		
 		case preGame:
 		{
+			#if defined DEBUG
+			LogToFile("gscramble.debug.txt", "disabling due to roundstate pregame");
+			#endif
 			return false;
 		}
 		
 		case setup:
 		{
+			#if defined DEBUG
+			LogToFile("gscramble.debug.txt", "disabling due to roundstate setup");
+			#endif
 			return false;
 		}
 		
 		case bonusRound:
 		{
+			#if defined DEBUG
+			LogToFile("gscramble.debug.txt", "disabling due to roundstate bonusround");
+			#endif
 			return false;
 		}
 	}

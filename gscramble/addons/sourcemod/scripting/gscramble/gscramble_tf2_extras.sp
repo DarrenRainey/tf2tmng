@@ -32,11 +32,47 @@ $Copyright: (c) Tf2Tmng 2009-2015$
 *************************************************************************
 *************************************************************************
 */
+stock GetRoundTimerInformation()
+{
+	new round_timer = -1;
+	new Float:best_end_time = 1000000000000.0;    //a very large "time"
+	new Float:timer_end_time;
+	new bool:found_valid_timer = false;
+	new bool:timer_is_disabled = true;
+	new bool:timer_is_paused = true;
+
+	while ( (round_timer = FindEntityByClassname(round_timer, "team_round_timer")) != -1) {
+		//Make sure this timer is enabled
+		timer_is_paused = bool:GetEntProp(round_timer, Prop_Send, "m_bTimerPaused");
+		timer_is_disabled = bool:GetEntProp(round_timer, Prop_Send, "m_bIsDisabled");
+		
+		//End time is what we're interested in... fortunately, it works
+		// (getting the current time remaining does NOT work as of late November 2010)
+		timer_end_time = GetEntPropFloat(round_timer, Prop_Send, "m_flTimerEndTime");
+		
+		if (!timer_is_paused && !timer_is_disabled && (timer_end_time <= best_end_time || !found_valid_timer)) {
+			best_end_time = timer_end_time;
+			found_valid_timer = true;
+		}
+	}
+
+	if (found_valid_timer) {
+	#if defined DEBUG
+	LogToFile("gscramble.debug.txt", "%i", RoundFloat(g_fRoundEndTime - GetGameTime()));
+	#endif
+		g_fRoundEndTime = best_end_time;
+		g_bRoundIsTimed = true;
+	} else {
+		g_RoundState = normal;
+		g_bRoundIsTimed = false;
+	}
+}
+
 public TF2_GetRoundTimeLeft(Handle:plugin, numparams)
 {
-	if (g_RoundState == normal)
+	if (g_RoundState == normal && g_bRoundIsTimed)
 	{
-		return g_iRoundTimer;
+		return RoundFloat(GetGameTime() - g_fRoundEndTime);
 	}
 	else return 0;
 }
