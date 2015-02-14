@@ -91,7 +91,7 @@ public bool:AskPluginLoad(Handle:myself, bool:late, String:error[], err_max)
 	RegPluginLibrary("hlxce-sm-api");
 	
 	CreateNative("HLXCE_GetPlayerData", Native_HLXCE_GetPlayerData);
-	CreateNative("HLXCE_IsClientReady", Native_HLXCE_IsClientReady);
+	CreateNative("OnGotClientHLXPlayerId", Native_HLXCE_IsClientReady);
 	
 #if SOURCEMOD_V_MAJOR >= 1 && SOURCEMOD_V_MINOR >= 3
 	return APLRes_Success;
@@ -243,7 +243,14 @@ public OnGotRankingType(Handle:owner, Handle:hndl, const String:error[], any:cli
 
 public OnClientPostAdminCheck(client)
 {
-	GetClientHLXPlayerId(client);
+	CreateTimer(2.0, Timer_GetData, client);
+}
+
+public Action:Timer_GetData(Handle:timer, any:client)
+{
+	if (client && IsClientInGame(client) && !IsFakeClient(client))
+		GetClientHLXPlayerId(client);
+	return Plugin_Handled;
 }
 
 public OnClientDisconnect(client)
@@ -271,7 +278,7 @@ GetClientHLXPlayerId(client)
 	if (IsClientInGame(client) && IsClientConnected(client) && !IsFakeClient(client))
 	{
 		decl String:szAuthId[32];
-		if (GetClientAuthId(client, AuthId_Steam2, szAuthId, sizeof(szAuthId)))
+		if (GetClientAuthId(client, AuthId_Steam3, szAuthId, sizeof(szAuthId)))
 		{
 			decl String:szAuthIdEsc[49];
 			new iAuthIdLen;
