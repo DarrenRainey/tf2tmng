@@ -222,3 +222,19 @@ stock TF2_RemoveRagdolls()
 		AcceptEntityInput(iEnt, "Kill");
 	}
 }
+
+stock Float:GetCartProgress()
+{
+	new iEnt = -1;
+	new Float:fTotalProgress;
+	while((iEnt = FindEntityByClassname(iEnt, "team_train_watcher")) != -1 )
+	{
+		if (IsValidEntity(iEnt))
+		{
+			if (GetEntProp(iEnt, Prop_Data, "m_bDisabled"))
+				continue;
+			return GetEntPropFloat(iEnt, Prop_Send, "m_flTotalProgress");
+		}
+	}
+	return fTotalProgress;
+}

@@ -126,7 +126,7 @@ new Handle:cvar_Version				= INVALID_HANDLE,
 	Handle:cvar_LockTeamsFullRound  	= INVALID_HANDLE,
 	Handle:cvar_SelectSpectators 		= INVALID_HANDLE,
 	Handle:cvar_OneScramblePerRound 		= INVALID_HANDLE;
-	//Handle:cvar_ProgressDisable		=INVALID_HANDLE;
+	Handle:cvar_ProgressDisable		=INVALID_HANDLE;
 
 new Handle:g_hAdminMenu 			= INVALID_HANDLE,
 	Handle:g_hScrambleVoteMenu 		= INVALID_HANDLE,
@@ -331,7 +331,7 @@ public OnPluginStart()
 	cvar_ForceBalanceTrigger = CreateConVar("gs_ab_forcetrigger",	"4",	"If teams become imbalanced by this many players, auto-force a balance", FCVAR_PLUGIN, true, 0.0, false);
 	cvar_BalanceTimeLimit	= 	CreateConVar("gs_ab_timelimit", "0", 		"If there are this many seconds, or less, remaining in a round, stop auto-balacing", FCVAR_PLUGIN, true, 0.0, false);
 	cvar_AbHumanOnly 		= CreateConVar("gs_ab_humanonly", "0", "Only auto-balance human players", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	//cvar_ProgressDisable	=	CreateConVar("gs_ab_cartprogress_disable", ".90", "If the cart has reached this percentage of progress, then disable auto-balance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	cvar_ProgressDisable	=	CreateConVar("gs_ab_cartprogress_disable", ".90", "If the cart has reached this percentage of progress, then disable auto-balance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	
 	cvar_ImbalancePrevent	= CreateConVar("gs_prevent_spec_imbalance", "0", "If set, block changes to spectate that result in a team imbalance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BuddySystem		= CreateConVar("gs_use_buddy_system", "0", "Allow players to choose buddies to try to keep them on the same team", FCVAR_PLUGIN, true, 0.0, true, 1.0);
@@ -1149,7 +1149,7 @@ hook()
 	HookEvent("teamplay_point_captured", 	hook_PointCaptured, EventHookMode_Post);
 	HookEvent("object_destroyed", 			hook_ObjectDestroyed, EventHookMode_Post);
 	HookEvent("teamplay_flag_event",		hook_FlagEvent, EventHookMode_Post);
-	//HookEvent("escort_progress",			hook_EscortProgress, EventHookMode_Post);
+	HookEvent("teamplay_pre_round_time_left",			hookPreRound, EventHookMode_PostNoCopy);
 	HookUserMessage(GetUserMessageId("TextMsg"), UserMessageHook_Class, false);
 	AddGameLogHook(LogHook);
 	
@@ -1194,7 +1194,7 @@ unHook()
 	UnhookEvent("medic_death", hook_MedicDeath, EventHookMode_Post);
 	UnhookEvent("controlpoint_endtouch", hook_EndTouch, EventHookMode_Post);
 	UnhookEvent("teamplay_timer_time_added", TimerUpdateAdd, EventHookMode_Post);
-	//UnhookEvent("escort_progress",			hook_EscortProgress, EventHookMode_Post);
+	UnhookEvent("teamplay_pre_round_time_left",			hookPreRound, EventHookMode_PostNoCopy);
 
 	g_bHooked = false;
 }
@@ -1208,6 +1208,11 @@ public hook_MedicDeath(Handle:event, const String:name[], bool:dontBroadcast)
 	{
 		AddTeamworkTime(GetClientOfUserId(GetEventInt(event, "userid")));
 	}
+}
+
+public hookPreRound(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	g_RoundState = preGame;
 }
 
 public hook_EndTouch(Handle:event, const String:name[], bool:dontBroadcast)
@@ -2349,8 +2354,7 @@ public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 public Action:hook_Setup(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	g_RoundState = normal;
-	//CreateTimer(1.0, Timer_GetTime, TIMER_FLAG_NO_MAPCHANGE);
-	GetRoundTimerInformation();
+	CreateTimer(0.5, Timer_GetTime, TIMER_FLAG_NO_MAPCHANGE);
 	
 	if (g_aTeams[bImbalanced])
 	{
@@ -2388,6 +2392,11 @@ public Event_RoundWin(Handle:event, const String:name[], bool:dontBroadcast)
 	{
 		KillTimer(g_hForceBalanceTimer);
 		g_hForceBalanceTimer = INVALID_HANDLE;
+	}
+	if (g_hRoundTimeTick != INVALID_HANDLE)
+	{
+		KillTimer(g_hRoundTimeTick);
+		g_hRoundTimeTick = INVALID_HANDLE;
 	}
 	
 	if (g_hBalanceFlagTimer != INVALID_HANDLE)
@@ -2727,7 +2736,7 @@ public Action:Timer_GetTime(Handle:timer)
 {
 	CheckBalance(true);
 	GetRoundTimerInformation();
-	g_iTimerEnt = FindEntityByClassname(-1, "team_round_timer");
+	/*g_iTimerEnt = FindEntityByClassname(-1, "team_round_timer");
 	
 	if (g_iTimerEnt != -1)
 	{
@@ -2740,25 +2749,21 @@ public Action:Timer_GetTime(Handle:timer)
 			return Plugin_Handled;
 		}
 		
-		//g_iRoundTimer = GetEntProp(g_iTimerEnt, Prop_Send, "m_nTimerLength") -2;
-		
-		if (g_hRoundTimeTick != INVALID_HANDLE)
-		{
-			KillTimer(g_hRoundTimeTick);
-			g_hRoundTimeTick = INVALID_HANDLE;
-		}
+		//g_iRoundTimer = GetEntProp(g_iTimerEnt, Prop_Send, "m_nTimerLength") -2
 		
 		if (g_RoundState == bonusRound || g_RoundState == setup)
 		{
 			g_RoundState = normal;
 		}
-		
-		g_hRoundTimeTick = CreateTimer(1.0, Timer_Countdown, _, TIMER_REPEAT);
 	}
 	else
 	{
 		g_RoundState = normal;
 		g_bIsTimer = false;
+	}*/
+	if (g_RoundState == normal && g_hRoundTimeTick != INVALID_HANDLE)
+	{		
+		g_hRoundTimeTick = CreateTimer(15.0, Timer_Countdown, _, TIMER_REPEAT);
 	}
 	return Plugin_Handled;
 }
