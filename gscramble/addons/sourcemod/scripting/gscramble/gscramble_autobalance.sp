@@ -407,18 +407,18 @@ stock bool:IsOkToBalance()
 				return false;
 			}
 		}
-		/*
+		
 		new Float:fProgress = GetConVarFloat(cvar_ProgressDisable);
 		#if defined DEBUG
 		LogToFile("gscramble.debug.txt", "Progress = %f", g_fEscortProgress);
 		#endif
-		if (fProgress > 0 && g_fEscortProgress >= fProgress)
+		if (fProgress > 0.0 && GetCartProgress() >= fProgress)
 		{
 			#if defined DEBUG
 			LogToFile("gscramble.debug.txt", "disabling due to cart progress");
 			#endif
 			return false;
-		}*/
+		}
 		
 		return true;
 	}
