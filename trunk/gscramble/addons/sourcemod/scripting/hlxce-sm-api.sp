@@ -278,7 +278,7 @@ GetClientHLXPlayerId(client)
 	if (IsClientInGame(client) && IsClientConnected(client) && !IsFakeClient(client))
 	{
 		decl String:szAuthId[32];
-		if (GetClientAuthId(client, AuthId_Steam3, szAuthId, sizeof(szAuthId)))
+		if (GetClientAuthId(client, AuthId_Steam2, szAuthId, sizeof(szAuthId)))
 		{
 			decl String:szAuthIdEsc[49];
 			new iAuthIdLen;
