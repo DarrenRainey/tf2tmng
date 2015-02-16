@@ -257,3 +257,17 @@ stock Float:GetCartProgress()
 		return fTotalProgress_1;
 	return fTotalProgress_2;
 }
+
+stock bool:DoesClientHaveIntel(client)
+{
+	new iEnt = -1;
+	while ((iEnt = FindEntityByClassname(iEnt, "item_teamflag")) != -1) 
+	{
+		if (IsValidEntity(iEnt))
+		{
+			if (GetEntPropEnt(iEnt, Prop_Data, "m_hMoveParent") == client)
+				return true;
+		}
+	}
+	return false;
+}
