@@ -1967,7 +1967,8 @@ stock AttemptScrambleVote(client)
 		else if (GetConVarInt(cvar_VoteMode) == 0)
 		{			
 			g_bScrambleNextRound = true;
-			PrintToChatAll("\x01\x04[SM]\x01 %t", "ScrambleRound");			
+			if (!g_bSilent)
+				PrintToChatAll("\x01\x04[SM]\x01 %t", "ScrambleRound");			
 		}
 		else if (!Override && GetConVarInt(cvar_VoteMode) == 2)
 		{
@@ -2326,7 +2327,8 @@ public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 		{
 			g_bPreGameScramble = true;
 			g_bScrambleNextRound = true;
-			PrintToChatAll("\x01\x04[SM]\x01 %t", "ScrambleRound");
+			if (!g_bSilent)
+				PrintToChatAll("\x01\x04[SM]\x01 %t", "ScrambleRound");
 		}
 	}
 	else if (g_RoundState == preGame)
@@ -2832,20 +2834,24 @@ public OnLibraryRemoved(const String:name[])
 	{
 		g_hAdminMenu = INVALID_HANDLE;
 	}
-	
+	#if defined HLXCE_INCLUDED
 	if (StrEqual(name, "hlxce-sm-api"))
 	{
 		g_bUseHlxCe = false;
 	}
+	#endif
 	
+	#if defined GAMEME_INCLUDED
 	if (StrEqual(name, "gameme", false))
 	{
 		g_bUseGameMe = false;
 	}
+	#endif
 }
 
 public OnLibraryAdded(const String:name[])
 {
+	#if defined HLXCE_INCLUDED
 	if (StrEqual(name, "hlxce-sm-api"))
 	{
 		if (GetFeatureStatus(FeatureType_Native, "HLXCE_GetPlayerData") == FeatureStatus_Available)
@@ -2853,6 +2859,8 @@ public OnLibraryAdded(const String:name[])
 			g_bUseHlxCe = true;
 		}
 	}
+	#endif
+	#if defined GAMEME_INCLUDED
 	if (StrEqual(name, "gameme"))
 	{
 		if (GetFeatureStatus(FeatureType_Native, "QueryGameMEStats") == FeatureStatus_Available)
@@ -2860,6 +2868,7 @@ public OnLibraryAdded(const String:name[])
 			g_bUseGameMe = true;
 		}
 	}
+	#endif
 }
 
 public SortScoreDesc(x[], y[], array[][], Handle:data)

@@ -114,7 +114,8 @@ bool:BalancePlayer(client)
 	}
 	
 	LogAction(client, -1, "\"%L\" has been auto-balanced to %s.", client, sTeam);
-	PrintToChatAll("\x01\x04[SM]\x01 %t", "TeamChangedAll", sName, sTeam);
+	if (!g_bSilent)
+		PrintToChatAll("\x01\x04[SM]\x01 %t", "TeamChangedAll", sName, sTeam);
 	g_aTeams[bImbalanced]=false;
 	
 	return true;
@@ -367,7 +368,9 @@ stock BalanceTeams(bool:respawn=true)
 				TF2_SetPlayerClass(iFatTeam[i][0], TFClass_Scout);
 			}
 			
-			PrintToChatAll("\x01\x04[SM]\x01 %t", "TeamChangedAll", clientName, sTeam);
+			if (!g_bSilent)
+				PrintToChatAll("\x01\x04[SM]\x01 %t", "TeamChangedAll", clientName, sTeam);
+			
 			SetupTeamSwapBlock(iFatTeam[i][0]);
 			LogAction(iFatTeam[i][0], -1, "\"%L\" has been force-balanced to %s.", iFatTeam[i][0], sTeam);			
 			
