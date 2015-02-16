@@ -92,7 +92,8 @@ stock bool:WinStreakCheck(winningTeam)
 	
 	if (GetConVarBool(cvar_AutoScrambleRoundCount) && g_iRoundTrigger == g_iCompleteRounds)
 	{
-		PrintToChatAll("\x01\x04[SM]\x01 %t", "RoundMessage");
+		if (!g_bSilent)
+			PrintToChatAll("\x01\x04[SM]\x01 %t", "RoundMessage");
 		LogAction(0, -1, "Rount limit reached");
 		return true;
 	}
@@ -113,7 +114,8 @@ stock bool:WinStreakCheck(winningTeam)
 		
 		if (g_aTeams[iRedWins] >= GetConVarInt(cvar_AutoScrambleWinStreak))
 		{
-			PrintToChatAll("\x01\x04[SM]\x01 %t", "RedStreak");
+			if (!g_bSilent)
+				PrintToChatAll("\x01\x04[SM]\x01 %t", "RedStreak");
 			LogAction(0, -1, "Red win limit reached");
 			return true;
 		}
@@ -130,7 +132,8 @@ stock bool:WinStreakCheck(winningTeam)
 		
 		if (g_aTeams[iBluWins] >= GetConVarInt(cvar_AutoScrambleWinStreak))
 		{
-			PrintToChatAll("\x01\x04[SM]\x01 %t", "BluStreak");
+			if (!g_bSilent)
+				PrintToChatAll("\x01\x04[SM]\x01 %t", "BluStreak");
 			LogAction(0, -1, "Blu win limit reached");
 			return true;
 		}
@@ -254,7 +257,8 @@ bool:AutoScrambleCheck(winningTeam)
 		{
 			decl String:team[3];
 			g_bRedCapped ? (team = "BLU") : (team = "RED");
-			PrintToChatAll("\x01\x04[SM]\x01 %t", "NoCapMessage", team);
+			if (!g_bSilent)
+				PrintToChatAll("\x01\x04[SM]\x01 %t", "NoCapMessage", team);
 			LogAction(0, -1, "%s did not cap a point on KOTH", team);
 			return true;
 		}
@@ -274,7 +278,8 @@ bool:AutoScrambleCheck(winningTeam)
 			if (teamDominationDiff >= dominationDiffVar)
 			{
 				LogAction(0, -1, "domination difference detected");
-				PrintToChatAll("\x01\x04[SM]\x01 %t", "DominationMessage");
+				if (!g_bSilent)
+					PrintToChatAll("\x01\x04[SM]\x01 %t", "DominationMessage");
 				return true;
 			}	
 		}
@@ -284,7 +289,8 @@ bool:AutoScrambleCheck(winningTeam)
 	if (totalFrags > 20 && iDiffVar > 0.0 && GetAvgScoreDifference(winningTeam) >= iDiffVar)
 	{
 		LogAction(0, -1, "Average score diff detected");
-		PrintToChatAll("\x01\x04[SM]\x01 %t", "RatioMessage");
+		if (!g_bSilent)
+			PrintToChatAll("\x01\x04[SM]\x01 %t", "RatioMessage");
 		return true;
 	}
 	
@@ -298,7 +304,8 @@ bool:AutoScrambleCheck(winningTeam)
 	{
 		new minutes = iSteamRollVar / 60;
 		new seconds = iSteamRollVar % 60;
-		PrintToChatAll("\x01\x04[SM]\x01 %t", "WinTime", minutes, seconds);
+		if (!g_bSilent)
+			PrintToChatAll("\x01\x04[SM]\x01 %t", "WinTime", minutes, seconds);
 		LogAction(0, -1, "steam roll detected");
 		return true;		
 	}
@@ -309,7 +316,8 @@ bool:AutoScrambleCheck(winningTeam)
 	{		
 		if (ratio >= iFragRatioVar)
 		{
-			PrintToChatAll("\x01\x04[SM]\x01 %t", "FragDetection");
+			if (!g_bSilent)
+				PrintToChatAll("\x01\x04[SM]\x01 %t", "FragDetection");
 			LogAction(0, -1, "Frag ratio detected");
 			return true;			
 		}
@@ -398,14 +406,15 @@ public Action:timer_ScrambleDelay(Handle:timer, any:data)  // scramble logic
 	}
 	
 	CreateTimer(0.1, timer_AfterScramble, spawn, TIMER_FLAG_NO_MAPCHANGE);	
-	if (g_bPreGameScramble)
+	if (g_bPreGameScramble && !g_bSilent)
 	{
 		PrintToChatAll("\x01\x04[SM]\x01 %t", "PregameScrambled");
 		g_bPreGameScramble = false;
 	}
 	else
 	{
-		PrintToChatAll("\x01\x04[SM]\x01 %t", "Scrambled");		
+		if (!g_bSilent)
+			PrintToChatAll("\x01\x04[SM]\x01 %t", "Scrambled");		
 	}
 	
 	if (g_bIsTimer && g_RoundState == setup && GetConVarBool(cvar_SetupRestore))
