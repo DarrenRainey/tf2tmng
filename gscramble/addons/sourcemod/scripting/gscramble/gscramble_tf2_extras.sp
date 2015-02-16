@@ -114,7 +114,7 @@ stock bool:TF2_IsClientUberCharged(client)
 			if (StrEqual(sClass, "CWeaponMedigun", true))
 			{
 				new Float:chargeLevel = GetEntPropFloat(iIdx, Prop_Send, "m_flChargeLevel");
-				if (chargeLevel >= 0.55)	
+				if (chargeLevel >= 0.5)	
 				{
 					return true;
 				}
@@ -126,8 +126,15 @@ stock bool:TF2_IsClientUberCharged(client)
 
 stock bool:TF2_IsClientUbered(client)
 {
-	
-	if (TF2_IsPlayerInCondition(client, TFCond_Ubercharged) || TF2_IsPlayerInCondition(client, TFCond_Kritzkrieged) || TF2_IsPlayerInCondition(client, TFCond_UberchargeFading))
+	if (TF2_IsPlayerInCondition(client, TFCond_Ubercharged) 
+		|| TF2_IsPlayerInCondition(client, TFCond_Kritzkrieged) 
+		|| TF2_IsPlayerInCondition(client, TFCond_UberchargeFading)
+		|| TF2_IsPlayerInCondition(client, TFCond_UberBulletResist)
+		|| TF2_IsPlayerInCondition(client, TFCond_UberBlastResist)
+		|| TF2_IsPlayerInCondition(client, TFCond_UberFireResist)
+		|| TF2_IsPlayerInCondition(client, TFCond_BulletImmune)
+		|| TF2_IsPlayerInCondition(client, TFCond_BlastImmune)
+		|| TF2_IsPlayerInCondition(client, TFCond_FireImmune))
 	{
 		return true;
 	}
@@ -225,16 +232,28 @@ stock TF2_RemoveRagdolls()
 
 stock Float:GetCartProgress()
 {
-	new iEnt = -1;
-	new Float:fTotalProgress;
+	new iEnt = -1,
+		Float:fTotalProgress_1,
+		Float:fTotalProgress_2,
+		bool:bFoundCart = false; 
+		
 	while((iEnt = FindEntityByClassname(iEnt, "team_train_watcher")) != -1 )
 	{
 		if (IsValidEntity(iEnt))
 		{
 			if (GetEntProp(iEnt, Prop_Data, "m_bDisabled"))
 				continue;
-			return GetEntPropFloat(iEnt, Prop_Send, "m_flTotalProgress");
+			if (!bFoundCart)
+			{
+				fTotalProgress_1 = GetEntPropFloat(iEnt, Prop_Send, "m_flTotalProgress");
+				bFoundCart = true;
+				continue;
+			}
+			fTotalProgress_2 = GetEntPropFloat(iEnt, Prop_Send, "m_flTotalProgress");
+			break;
 		}
 	}
-	return fTotalProgress;
+	if (fTotalProgress_1 > fTotalProgress_2)
+		return fTotalProgress_1;
+	return fTotalProgress_2;
 }
