@@ -86,7 +86,7 @@ bool:BalancePlayer(client)
 	
 	if (!overrider)
 	{
-		if (!IsValidTarget(client, balance) || GetPlayerPriority(client) < 0)
+		if (!IsClientValidBalanceTarget(client) || GetPlayerPriority(client) < 0)
 		{
 			return false;	
 		}
@@ -320,7 +320,7 @@ stock BalanceTeams(bool:respawn=true)
 			{
 				iFatTeam[counter][1] = 3;
 			}
-			else if (IsValidTarget(i, balance))
+			else if (IsClientValidBalanceTarget(i))
 			{
 				iFatTeam[counter][1] = GetPlayerPriority(i);
 			}
@@ -472,4 +472,85 @@ public Action:Timer_BalanceSpawn(Handle:timer, any:id)
 	}
 	
 	return Plugin_Handled;
+}
+
+bool:IsClientValidBalanceTarget(client)
+{
+	if (IsClientInGame(client) && IsValidTeam(client))
+	{
+		if (IsFakeClient(client))
+		{
+			if (GetConVarBool(cvar_AbHumanOnly) && !TF2_IsClientOnlyMedic(client))
+			{
+				return false;
+			}
+			return true;
+		}
+		// hard coded protections no one wants to be swapped carrying objective or while ubered
+		if (TF2_IsClientUberCharged(client) || TF2_IsClientUbered(client) || DoesClientHaveIntel(client))
+			return false;
+
+		if (GetConVarInt(cvar_TopProtect) && !IsNotTopPlayer(client, GetClientTeam(client)))
+		{
+			return false;
+		}
+		
+		if (GetConVarBool(cvar_ProtectOnlyMedic) && !TF2_IsClientOnlyMedic(client))
+			return false;
+		
+		new iImmunity = e_Protection:GetConVarInt(cvar_BalanceImmunity),
+			bool:bAdmin = false,
+			bool:bEngie = false;
+		switch (iImmunity)
+		{
+			case admin:
+				bAdmin = true;
+			case uberAndBuildings:
+				bEngie = true;
+			case both:
+			{
+				bAdmin = true;
+				bEngie = true;
+			}
+		}
+		if (bAdmin)
+		{
+			new String:flags[32];
+			GetConVarString(cvar_BalanceAdmFlags, flags, sizeof(flags));
+			if (IsAdmin(client, flags))
+				return false;
+		}
+		if (bEngie)
+		{
+			if (TF2_HasBuilding(client))
+				return false;
+		}
+
+		if (g_bUseBuddySystem)
+		{
+			new buddy;
+			
+			if ((buddy = g_aPlayers[client][iBuddy]))
+			{
+				if (GetClientTeam(buddy) == GetClientTeam(client))
+				{
+					LogAction(-1, 0, "Flagging client %L invalid because of buddy preference", client);
+					return false;
+				}
+				else if (IsValidTeam(g_aPlayers[client][iBuddy]))
+				{
+					LogAction(-1, 0, "Flagging client %L valid because of buddy preference", client);
+					return true;				
+				}
+			}		
+			if (IsClientBuddy(client))
+			{
+				return false;
+			}
+		}
+		if (GetConVarBool(cvar_BalanceDuelImmunity) && TF2_IsPlayerInDuel(client))
+			return false;
+		return true;
+	}
+	return false;
 }

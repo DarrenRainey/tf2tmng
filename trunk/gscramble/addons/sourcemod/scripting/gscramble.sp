@@ -125,6 +125,8 @@ new Handle:cvar_Version				= INVALID_HANDLE,
 	Handle:cvar_AbHumanOnly			= INVALID_HANDLE,
 	Handle:cvar_LockTeamsFullRound  	= INVALID_HANDLE,
 	Handle:cvar_SelectSpectators 		= INVALID_HANDLE,
+	Handle:cvar_ProtectOnlyMedic		= INVALID_HANDLE,
+	Handle:cvar_BalanceDuelImmunity		= INVALID_HANDLE,
 	Handle:cvar_OneScramblePerRound 		= INVALID_HANDLE;
 	Handle:cvar_ProgressDisable		=INVALID_HANDLE;
 
@@ -194,7 +196,7 @@ new g_iTeamIds[2] = {TEAM_RED, TEAM_BLUE};
 new	g_iPluginStartTime,
 	g_iMapStartTime,
 	g_iRoundStartTime,
-	g_iSpawnTime,
+	//g_iSpawnTime,
 	g_iVotes,
 	g_iVoters,
 	g_iVotesNeeded,
@@ -332,6 +334,8 @@ public OnPluginStart()
 	cvar_BalanceTimeLimit	= 	CreateConVar("gs_ab_timelimit", "0", 		"If there are this many seconds, or less, remaining in a round, stop auto-balacing", FCVAR_PLUGIN, true, 0.0, false);
 	cvar_AbHumanOnly 		= CreateConVar("gs_ab_humanonly", "0", "Only auto-balance human players", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_ProgressDisable	=	CreateConVar("gs_ab_cartprogress_disable", ".90", "If the cart has reached this percentage of progress, then disable auto-balance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	cvar_BalanceDuelImmunity = CreateConVar("gs_ab_duel_immunity", "1", "Players in duels are immune from auto-balance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	cvar_ProtectOnlyMedic	=	CreateConVar("gs_ab_protect_medic", "1", "A team's only medic will be immune from balancing", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	
 	cvar_ImbalancePrevent	= CreateConVar("gs_prevent_spec_imbalance", "0", "If set, block changes to spectate that result in a team imbalance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BuddySystem		= CreateConVar("gs_use_buddy_system", "0", "Allow players to choose buddies to try to keep them on the same team", FCVAR_PLUGIN, true, 0.0, true, 1.0);
@@ -2338,7 +2342,7 @@ public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 	}
 	
 	g_iRoundStartTime = GetTime();
-	g_iSpawnTime = g_iRoundStartTime;
+	//g_iSpawnTime = g_iRoundStartTime;
 	
 	/**
 	reset
@@ -2514,44 +2518,10 @@ bool:IsClientBuddy(client)
 
 bool:IsValidTarget(client, e_ImmunityModes:mode)
 {
-	if (IsFakeClient(client))
-	{
-		if (mode != scramble && GetConVarBool(cvar_AbHumanOnly))
-		{
-			return false;
-		}
-		
-		return true;
-	}
 
-	if ((mode == scramble && GetConVarBool(cvar_ScrambleDuelImmunity)) || mode == balance)
+	if ((mode == scramble && GetConVarBool(cvar_ScrambleDuelImmunity)))
 	{
 		if (TF2_IsPlayerInDuel(client))
-		{
-			return false;
-		}
-	}
-	
-	// next check for buddies. if the buddy is on the wrong team, we skip the rest of the immunity checks
-	if (g_bUseBuddySystem && mode == balance)
-	{
-		new buddy;
-		
-		if ((buddy = g_aPlayers[client][iBuddy]))
-		{
-			if (GetClientTeam(buddy) == GetClientTeam(client))
-			{
-				LogAction(-1, 0, "Flagging client %L invalid because of buddy preference", client);
-				return false;
-			}
-			else if (IsValidTeam(g_aPlayers[client][iBuddy]))
-			{
-				LogAction(-1, 0, "Flagging client %L valid because of buddy preference", client);
-				return true;				
-			}
-		}
-		
-		if (IsClientBuddy(client))
 		{
 			return false;
 		}
@@ -2568,36 +2538,13 @@ bool:IsValidTarget(client, e_ImmunityModes:mode)
 		}
 		GetConVarString(cvar_ScrambleAdmFlags, flags, sizeof(flags));
 	}
-	else
-	{
-		iImmunity = e_Protection:GetConVarInt(cvar_BalanceImmunity);
-		GetConVarString(cvar_BalanceAdmFlags, flags, sizeof(flags));
-	}
-	
 	/*
 		override immunities when things like alive or buildings done matter
 		if the round started within 10 seconds, override immunity too
 	*/
-	new iStart = GetTime() - g_iSpawnTime;
-	
-	if (iStart <= 10 || mode == scramble || (g_RoundState != normal && g_RoundState != setup))
-	{
-		if (iImmunity == both)
-		{
-			iImmunity = admin;
-		}
-		else if (iImmunity == uberAndBuildings)
-		{
-			return true;
-		}
-	}
-	
+
 	if (IsClientInGame(client) && IsValidTeam(client))
 	{
-		if (mode == balance && GetConVarInt(cvar_TopProtect) && !IsNotTopPlayer(client, GetClientTeam(client)))
-		{
-			return false;
-		}
 		
 		if (iImmunity == none) // if no immunity mode set, don't check for it :p
 		{
@@ -2628,8 +2575,7 @@ bool:IsValidTarget(client, e_ImmunityModes:mode)
 	if (IsValidSpectator(client))
 	{
 		return true;
-	}
-	
+	}	
 	return false;
 }
 
