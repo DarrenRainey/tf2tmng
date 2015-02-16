@@ -127,6 +127,7 @@ new Handle:cvar_Version				= INVALID_HANDLE,
 	Handle:cvar_SelectSpectators 		= INVALID_HANDLE,
 	Handle:cvar_ProtectOnlyMedic		= INVALID_HANDLE,
 	Handle:cvar_BalanceDuelImmunity		= INVALID_HANDLE,
+	Handle:cvar_BalanceChargeLevel		= INVALID_HANDLE,
 	Handle:cvar_OneScramblePerRound 		= INVALID_HANDLE;
 	Handle:cvar_ProgressDisable		=INVALID_HANDLE;
 
@@ -336,6 +337,7 @@ public OnPluginStart()
 	cvar_ProgressDisable	=	CreateConVar("gs_ab_cartprogress_disable", ".90", "If the cart has reached this percentage of progress, then disable auto-balance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BalanceDuelImmunity = CreateConVar("gs_ab_duel_immunity", "1", "Players in duels are immune from auto-balance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_ProtectOnlyMedic	=	CreateConVar("gs_ab_protect_medic", "1", "A team's only medic will be immune from balancing", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	cvar_BalanceChargeLevel = CreateConVar("gs_ab_protectmedic_chargelevel", "0.5", "Charge level to protect medics from auto balance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	
 	cvar_ImbalancePrevent	= CreateConVar("gs_prevent_spec_imbalance", "0", "If set, block changes to spectate that result in a team imbalance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BuddySystem		= CreateConVar("gs_use_buddy_system", "0", "Allow players to choose buddies to try to keep them on the same team", FCVAR_PLUGIN, true, 0.0, true, 1.0);
@@ -2781,7 +2783,7 @@ stock GetPlayerPriority(client)
 		
 		if (g_RoundState != bonusRound)
 		{
-			if (TF2_HasBuilding(client)||TF2_IsClientUberCharged(client)||TF2_IsClientUbered(client)|| !IsNotTopPlayer(client, GetClientTeam(client))||TF2_IsClientOnlyMedic(client))
+			if (TF2_HasBuilding(client)||DoesClientHaveIntel(client)||TF2_IsClientUberCharged(client)||TF2_IsClientUbered(client)|| !IsNotTopPlayer(client, GetClientTeam(client))||TF2_IsClientOnlyMedic(client))
 			{
 				return -15;
 			}
