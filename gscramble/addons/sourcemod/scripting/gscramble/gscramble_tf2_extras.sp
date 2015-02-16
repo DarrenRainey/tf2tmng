@@ -114,7 +114,7 @@ stock bool:TF2_IsClientUberCharged(client)
 			if (StrEqual(sClass, "CWeaponMedigun", true))
 			{
 				new Float:chargeLevel = GetEntPropFloat(iIdx, Prop_Send, "m_flChargeLevel");
-				if (chargeLevel >= 0.5)	
+				if (chargeLevel >= GetConVarFloat(cvar_BalanceChargeLevel))
 				{
 					return true;
 				}
@@ -134,7 +134,8 @@ stock bool:TF2_IsClientUbered(client)
 		|| TF2_IsPlayerInCondition(client, TFCond_UberFireResist)
 		|| TF2_IsPlayerInCondition(client, TFCond_BulletImmune)
 		|| TF2_IsPlayerInCondition(client, TFCond_BlastImmune)
-		|| TF2_IsPlayerInCondition(client, TFCond_FireImmune))
+		|| TF2_IsPlayerInCondition(client, TFCond_FireImmune)
+		|| TF2_IsPlayerInCondition(client, TFCond_MegaHeal))
 	{
 		return true;
 	}
