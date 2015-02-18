@@ -128,6 +128,7 @@ new Handle:cvar_Version				= INVALID_HANDLE,
 	Handle:cvar_ProtectOnlyMedic		= INVALID_HANDLE,
 	Handle:cvar_BalanceDuelImmunity		= INVALID_HANDLE,
 	Handle:cvar_BalanceChargeLevel		= INVALID_HANDLE,
+	Handle:cvar_ScrambleCheckImmune		= INVALID_HANDLE,
 	Handle:cvar_OneScramblePerRound 		= INVALID_HANDLE;
 	Handle:cvar_ProgressDisable		=INVALID_HANDLE;
 
@@ -393,6 +394,7 @@ public OnPluginStart()
 	cvar_PrintScrambleStats = CreateConVar("gs_as_print_stats", "1", "If enabled, print the scramble stats", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_ScrambleDuelImmunity = CreateConVar("gs_as_dueling_immunity", "0", "If set it 1, grant immunity to dueling players during a scramble", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_LockTeamsFullRound	= CreateConVar("gs_as_lockteamsafter", "0", "If enabled, block team changes after a scramble for the entire next round", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	cvar_ScrambleCheckImmune = CreateConVar("gs_scramble_checkummunity_percent", ".20", "If this percentage or higher of the players are immune from scramble, ignore immunity", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	
 	cvar_Silent 		=	CreateConVar("gs_silent", "0", 	"Disable most commen chat messages", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_VoteCommand =	CreateConVar("gs_vote_trigger",	"votescramble", "The trigger for starting a vote-scramble", FCVAR_PLUGIN);
@@ -2543,10 +2545,14 @@ bool:IsValidTarget(client, e_ImmunityModes:mode)
 		GetConVarString(cvar_ScrambleAdmFlags, flags, sizeof(flags));
 	}
 	/*
-		override immunities when things like alive or buildings done matter
+		override immunities when things like alive or buildings don't matter
 		if the round started within 10 seconds, override immunity too
 	*/
-
+	if (g_RoundState == setup || g_RoundState == bonusRound)
+		return true;
+	if (GetTime() - g_iRoundStartTime <= 10)
+		return true;
+		
 	if (IsClientInGame(client) && IsValidTeam(client))
 	{
 		
