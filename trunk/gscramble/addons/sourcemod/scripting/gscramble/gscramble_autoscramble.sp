@@ -434,9 +434,9 @@ stock PerformTopSwap()
 		iArray1[MaxClients][2],
 		iArray2[MaxClients][2],
 		iCount1,
-		iCount2,
-		bool:bDisableImmunity = DisableScrambleImmunityCheck();
-		
+		iCount2;
+		//bool:bDisableImmunity = DisableScrambleImmunityCheck();
+
 	if (iSwaps > iTeam1 || iSwaps > iTeam2)
 	{
 		if (iTeam1 > iTeam2)
@@ -450,7 +450,7 @@ stock PerformTopSwap()
 	}
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientInGame(i) && (bDisableImmunity || IsValidTarget(i, scramble)))
+		if (IsClientInGame(i) && IsValidTarget(i, scramble))
 		{
 			if (GetClientTeam(i) == TEAM_RED)
 			{
@@ -767,8 +767,8 @@ stock ScramblePlayers(e_ScrambleModes:scrambleMode)
 	
 	new i, iCount, iRedImmune, iBluImmune, iSwaps, iTempTeam,
 		bool:bToRed, iImmuneTeam, iImmuneDiff, client;
-	new iValidPlayers[GetClientCount()],
-		bool:bDisableCheck = DisableScrambleImmunityCheck();
+	new iValidPlayers[GetClientCount()];
+		//bool:bDisableCheck = DisableScrambleImmunityCheck();
 	
 	/**
 	Start of by getting a list of the valid players and finding out who are immune
@@ -777,7 +777,7 @@ stock ScramblePlayers(e_ScrambleModes:scrambleMode)
 	{
 		if (IsClientInGame(i) && (IsValidTeam(i) || IsValidSpectator(i)))
 		{
-			if (bDisableCheck || IsValidTarget(i, scramble))
+			if (IsValidTarget(i, scramble))
 			{
 				iValidPlayers[iCount] = i;
 				iCount++;
@@ -874,7 +874,7 @@ stock ScramblePlayers(e_ScrambleModes:scrambleMode)
 		{
 			if (IsClientInGame(i) && IsValidTeam(i))
 			{
-				if (bDisableCheck || IsValidTarget(i, scramble))
+				if (IsValidTarget(i, scramble))
 				{
 					iValidPlayers[iCount] = i;
 					iCount++;
@@ -938,6 +938,7 @@ PrintScrambleStats(swaps)
 	}
 }
 
+/***
 stock bool DisableScrambleImmunityCheck()
 {
 	if (!GetConVarBool(cvar_ScrambleImmuneMode))
@@ -966,4 +967,4 @@ stock bool DisableScrambleImmunityCheck()
 	if(FloatDiv(float(iImmuneTotal), float(iTotal)) >= fPercent)
 		return true;
 	return false;
-}
+}***/
