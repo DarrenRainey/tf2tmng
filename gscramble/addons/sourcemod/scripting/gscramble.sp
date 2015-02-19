@@ -51,7 +51,7 @@ comment these 2 lines if you want to compile without them.
 #endif
 #define REQUIRE_PLUGIN
 
-#define VERSION "3.0.23"
+#define VERSION "3.0.24"
 #define TEAM_RED 2
 #define TEAM_BLUE 3
 #define SCRAMBLE_SOUND  "vo/announcer_am_teamscramble03.wav"
@@ -108,29 +108,30 @@ new Handle:cvar_Version				= INVALID_HANDLE,
 	Handle:cvar_BalanceActionDelay	= INVALID_HANDLE,
 	Handle:cvar_ForceBalanceTrigger = INVALID_HANDLE,
 	Handle:cvar_NoSequentialScramble = INVALID_HANDLE,
-	Handle:cvar_AdminBlockVote		= INVALID_HANDLE,
-	Handle:cvar_BuddySystem 		= INVALID_HANDLE,
-	Handle:cvar_ImbalancePrevent = INVALID_HANDLE,
-	Handle:cvar_MenuIntegrate = INVALID_HANDLE,
-	Handle:cvar_Silent 			= INVALID_HANDLE,
-	Handle:cvar_VoteCommand		= INVALID_HANDLE,
-	Handle:cvar_VoteAd			= INVALID_HANDLE,
-	Handle:cvar_BlockJointeam	= INVALID_HANDLE,
-	Handle:cvar_TopSwaps			= INVALID_HANDLE,
-	Handle:cvar_BalanceTimeLimit = INVALID_HANDLE,
-	Handle:cvar_ScrLockTeams		= INVALID_HANDLE,
-	Handle:cvar_RandomSelections = INVALID_HANDLE,
-	Handle:cvar_PrintScrambleStats = INVALID_HANDLE,
-	Handle:cvar_ScrambleDuelImmunity = INVALID_HANDLE,
-	Handle:cvar_AbHumanOnly			= INVALID_HANDLE,
+	Handle:cvar_AdminBlockVote			= INVALID_HANDLE,
+	Handle:cvar_BuddySystem 			= INVALID_HANDLE,
+	Handle:cvar_ImbalancePrevent		= INVALID_HANDLE,
+	Handle:cvar_MenuIntegrate			= INVALID_HANDLE,
+	Handle:cvar_Silent 					= INVALID_HANDLE,
+	Handle:cvar_VoteCommand				= INVALID_HANDLE,
+	Handle:cvar_VoteAd					= INVALID_HANDLE,
+	Handle:cvar_BlockJointeam			= INVALID_HANDLE,
+	Handle:cvar_TopSwaps				= INVALID_HANDLE,
+	Handle:cvar_BalanceTimeLimit 		= INVALID_HANDLE,
+	Handle:cvar_ScrLockTeams			= INVALID_HANDLE,
+	Handle:cvar_RandomSelections 		= INVALID_HANDLE,
+	Handle:cvar_PrintScrambleStats		= INVALID_HANDLE,
+	Handle:cvar_ScrambleDuelImmunity 	= INVALID_HANDLE,
+	Handle:cvar_AbHumanOnly				= INVALID_HANDLE,
 	Handle:cvar_LockTeamsFullRound  	= INVALID_HANDLE,
 	Handle:cvar_SelectSpectators 		= INVALID_HANDLE,
 	Handle:cvar_ProtectOnlyMedic		= INVALID_HANDLE,
 	Handle:cvar_BalanceDuelImmunity		= INVALID_HANDLE,
 	Handle:cvar_BalanceChargeLevel		= INVALID_HANDLE,
 	Handle:cvar_ScrambleCheckImmune		= INVALID_HANDLE,
-	Handle:cvar_OneScramblePerRound 		= INVALID_HANDLE;
-	Handle:cvar_ProgressDisable		=INVALID_HANDLE;
+	Handle:cvar_BalanceImmunityCheck	= INVALID_HANDLE,
+	Handle:cvar_OneScramblePerRound 	= INVALID_HANDLE,
+	Handle:cvar_ProgressDisable			= INVALID_HANDLE;
 
 new Handle:g_hAdminMenu 			= INVALID_HANDLE,
 	Handle:g_hScrambleVoteMenu 		= INVALID_HANDLE,
@@ -157,12 +158,12 @@ new Handle:g_cookie_timeBlocked 	= INVALID_HANDLE,
 
 new String:g_sVoteCommands[3][65];
 
-new bool:g_bScrambleNextRound = false,	
-	bool:g_bVoteAllowed, 			
-	bool:g_bScrambleAfterVote,			
-	bool:g_bWasFullRound = false,	
+new bool:g_bScrambleNextRound = false,
+	bool:g_bVoteAllowed,
+	bool:g_bScrambleAfterVote,
+	bool:g_bWasFullRound = false,
 	bool:g_bPreGameScramble,
-	bool:g_bHooked = false,		
+	bool:g_bHooked = false,
 	bool:g_bIsTimer,
 	bool:g_bArenaMode,
 	bool:g_bKothMode,
@@ -291,8 +292,8 @@ enum e_ScrambleModes
 	hlxCe_Rank,
 	hlxCe_Skill,
 	playerClass,
-	randomSort,
-}
+	randomSort
+};
 
 new e_RoundState:g_RoundState,
 	ScrambleTime:g_iDefMode,
@@ -324,11 +325,11 @@ public OnPluginStart()
 	CheckTranslation();
 	cvar_Enabled			= CreateConVar("gs_enabled", 		"1",		"Enable/disable the plugin and all its hooks.", FCVAR_PLUGIN|FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
-	cvar_Balancer		=	CreateConVar("gs_autobalance",	"0",	"Enable/disable the autobalance feature of this plugin.\nUse only if you have the built-in balancer disabled.", FCVAR_PLUGIN, true, 0.0, true, 1.0);	
-	cvar_TopProtect		= CreateConVar("gs_ab_protect", "5",	"How many of the top players to protect on each team from autobalance.", FCVAR_PLUGIN, true, 0.0, false);
-	cvar_BalanceTime	= 	CreateConVar("gs_ab_balancetime",	"5",			"Time in minutes after a client is balanced in which they cannot be balanced again.", FCVAR_PLUGIN);
-	cvar_BalanceLimit	=	CreateConVar("gs_ab_unbalancelimit",	"2",	"If one team has this many more players than the other, then consider the teams imbalanced.", FCVAR_PLUGIN);
-	cvar_BalanceImmunity =	CreateConVar("gs_ab_immunity",			"2",	"Controls who is immune from auto-balance\n0 = no immunity\n1 = admins\n2 = engies with buildings\n3 = both admins and engies with buildings", FCVAR_PLUGIN, true, 0.0, true, 3.0);
+	cvar_Balancer			=	CreateConVar("gs_autobalance",	"0",	"Enable/disable the autobalance feature of this plugin.\nUse only if you have the built-in balancer disabled.", FCVAR_PLUGIN, true, 0.0, true, 1.0);	
+	cvar_TopProtect			= CreateConVar("gs_ab_protect", "5",	"How many of the top players to protect on each team from autobalance.", FCVAR_PLUGIN, true, 0.0, false);
+	cvar_BalanceTime		= 	CreateConVar("gs_ab_balancetime",	"5",			"Time in minutes after a client is balanced in which they cannot be balanced again.", FCVAR_PLUGIN);
+	cvar_BalanceLimit		=	CreateConVar("gs_ab_unbalancelimit",	"2",	"If one team has this many more players than the other, then consider the teams imbalanced.", FCVAR_PLUGIN);
+	cvar_BalanceImmunity 	=	CreateConVar("gs_ab_immunity",			"2",	"Controls who is immune from auto-balance\n0 = no immunity\n1 = admins\n2 = engies with buildings\n3 = both admins and engies with buildings", FCVAR_PLUGIN, true, 0.0, true, 3.0);
 	cvar_MaxUnbalanceTime	= CreateConVar("gs_ab_max_unbalancetime", "30", "Max time the teams are allowed to be unbalanced before a balanced is forced on living players.\n0 = disabled.", FCVAR_PLUGIN, true, 0.0, false); 
 	cvar_Preference			= CreateConVar("gs_ab_preference",		"1",	"Allow clients to tell the plugin what team they prefer.  When an autobalance starts, if the client prefers the team, it overrides any immunity check.", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BalanceActionDelay = CreateConVar("gs_ab_actiondelay",		"5", 	"Time, in seconds after an imbalance is detected in which an imbalance is flagged, and possible swapping can occur", FCVAR_PLUGIN, true, 0.0, false);
@@ -339,11 +340,12 @@ public OnPluginStart()
 	cvar_BalanceDuelImmunity = CreateConVar("gs_ab_duel_immunity", "1", "Players in duels are immune from auto-balance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_ProtectOnlyMedic	=	CreateConVar("gs_ab_protect_medic", "1", "A team's only medic will be immune from balancing", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BalanceChargeLevel = CreateConVar("gs_ab_protectmedic_chargelevel", "0.5", "Charge level to protect medics from auto balance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	
+	cvar_BalanceImmunityCheck = CreateConVar("gs_balance_checkummunity_percent", "0.0", "Percentage of players immune from auto balance to stat to ignore balance immunity check", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+
 	cvar_ImbalancePrevent	= CreateConVar("gs_prevent_spec_imbalance", "0", "If set, block changes to spectate that result in a team imbalance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BuddySystem		= CreateConVar("gs_use_buddy_system", "0", "Allow players to choose buddies to try to keep them on the same team", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_SelectSpectators = CreateConVar("gs_Select_spectators", "60", "During a scramble or force-balance, select spectators who have change to spectator in less time in seconds than this setting, 0 disables", FCVAR_PLUGIN, true, 0.0, false);
-	
+
 	cvar_TeamworkProtect	= CreateConVar("gs_teamwork_protect", "60",		"Time in seconds to protect a client from autobalance if they have recently captured a point, defended/touched intelligence, or assisted in or destroying an enemy sentry. 0 = disabled", FCVAR_PLUGIN, true, 0.0, false);
 	cvar_ForceBalance 		= CreateConVar("gs_force_balance",	"0", 		"Force a balance between each round. (If you use a custom team balance plugin that doesn't do this already, or you have the default one disabled)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_TeamSwapBlockImmunity = CreateConVar("gs_teamswitch_immune",	"1",	"Sets if admins (root and ban) are immune from team swap blocking", FCVAR_PLUGIN, true, 0.0, true, 1.0);
@@ -394,8 +396,8 @@ public OnPluginStart()
 	cvar_PrintScrambleStats = CreateConVar("gs_as_print_stats", "1", "If enabled, print the scramble stats", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_ScrambleDuelImmunity = CreateConVar("gs_as_dueling_immunity", "0", "If set it 1, grant immunity to dueling players during a scramble", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_LockTeamsFullRound	= CreateConVar("gs_as_lockteamsafter", "0", "If enabled, block team changes after a scramble for the entire next round", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	cvar_ScrambleCheckImmune = CreateConVar("gs_scramble_checkummunity_percent", ".20", "If this percentage or higher of the players are immune from scramble, ignore immunity", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	
+	cvar_ScrambleCheckImmune = CreateConVar("gs_scramble_checkummunity_percent", "0.0", "If this percentage or higher of the players are immune from scramble, ignore immunity", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+
 	cvar_Silent 		=	CreateConVar("gs_silent", "0", 	"Disable most commen chat messages", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_VoteCommand =	CreateConVar("gs_vote_trigger",	"votescramble", "The trigger for starting a vote-scramble", FCVAR_PLUGIN);
 	cvar_VoteAd		= CreateConVar("gs_vote_advertise", "500", "How often, in seconds, to advertise the vote command trigger.\n0 disables this", FCVAR_PLUGIN, true, 0.0, false);
@@ -421,7 +423,7 @@ public OnPluginStart()
 	HookConVarChange(cvar_NoSequentialScramble, handler_ConVarChange);
 	HookConVarChange(cvar_SortMode, handler_ConVarChange);
 	
-	AutoExecConfig(true, "plugin.gscramble");	
+	AutoExecConfig(true, "plugin.gscramble");
 	LoadTranslations("common.phrases");
 	LoadTranslations("gscramble.phrases");
 		
@@ -469,7 +471,7 @@ RegCommands()
 	AddCommandListener(CMD_Listener, "spectate");
 	
 	RegConsoleCmd("sm_preference", cmd_Preference);
-	RegConsoleCmd("sm_addbuddy",   cmd_AddBuddy);	
+	RegConsoleCmd("sm_addbuddy",   cmd_AddBuddy);
 }
 
 public Action:CMD_Listener(client, const String:command[], argc)
@@ -519,7 +521,7 @@ public Action:CMD_Listener(client, const String:command[], argc)
 					HandleStacker(client);
 					return Plugin_Handled;
 					
-				}				
+				}
 				
 				if (StrEqual(command, "spectate", false) || StringToInt(sArg) < 2 || StrContains(sArg, "spec", false) != -1)
 				{
@@ -1430,7 +1432,6 @@ public OnClientDisconnect(client)
 	{
 		g_iNumAdmins--;
 	}
-	
 }
 
 public Action:Event_PlayerDisconnect(Handle:event, const String:name[], bool:dontBroadcast)
@@ -2555,29 +2556,71 @@ bool:IsValidTarget(client, e_ImmunityModes:mode)
 		
 	if (IsClientInGame(client) && IsValidTeam(client))
 	{
-		
 		if (iImmunity == none) // if no immunity mode set, don't check for it :p
 		{
 			return true;
 		}
-		
+		new bool:bCheckAdmin = false,
+			bool:bCheckUberBuild = false;
 		switch (iImmunity)
 		{
 			case admin:
 			{
-				if (IsAdmin(client, flags))
-					return false;			
+				bCheckAdmin = true;
 			}
 			case uberAndBuildings:
 			{
-				if (TF2_HasBuilding(client) || TF2_IsClientUberCharged(client) || TF2_IsClientUbered(client))
-					return false;
+				bCheckUberBuild = true;
+				/*
+				//if (TF2_HasBuilding(client) || TF2_IsClientUberCharged(client) || TF2_IsClientUbered(client))
+				// return false;*/
 			}
 			case both:
 			{
-				if (IsAdmin(client, flags) || TF2_HasBuilding(client) || TF2_IsClientUberCharged(client) || TF2_IsClientUbered(client))
-					return false;			
+				bCheckAdmin = true;
+				bCheckUberBuild = true;
+				/*
+				//if (IsAdmin(client, flags) || TF2_HasBuilding(client) || TF2_IsClientUberCharged(client) || TF2_IsClientUbered(client))
+				//	return false;*/
 			}
+		}
+		if (bCheckUberBuild)
+		{
+			if (TF2_HasBuilding(client) || TF2_IsClientUberCharged(client) || TF2_IsClientUbered(client))
+			{
+				return false;
+			}
+		}
+			
+		if (bCheckAdmin)
+		{
+			new bool:bSkip = false;
+			new Float:fPercent = GetConVarFloat(cvar_ScrambleCheckImmune);
+			// check to see if we set to stop checking admin flags during scramble
+			if (fPercent > 0.0)
+			{
+				new iImmune,
+					iTotal,
+					iTargets;
+				for (new i = 1; i <= MaxClients; i++)
+				{
+					if (IsClientInGame(i) && IsValidTeam(i))
+					{
+						if (IsAdmin(i, flags))
+							iImmune++;
+						else
+							iTargets++;
+					}
+				}
+				if (iImmune)
+				{
+					iTotal = iImmune + iTargets;
+					if (FloatDiv(float(iImmune), float(iTotal)) >= fPercent)
+						return true;
+				}
+			}
+			if (IsAdmin(client, flags))
+				return false;
 		}
 		return true;
 	}
@@ -2585,7 +2628,7 @@ bool:IsValidTarget(client, e_ImmunityModes:mode)
 	if (IsValidSpectator(client))
 	{
 		return true;
-	}	
+	}
 	return false;
 }
 
