@@ -507,26 +507,63 @@ bool:IsClientValidBalanceTarget(client)
 		switch (iImmunity)
 		{
 			case admin:
+			{
 				bAdmin = true;
+			}
 			case uberAndBuildings:
+			{
 				bEngie = true;
+			}
 			case both:
 			{
 				bAdmin = true;
 				bEngie = true;
 			}
 		}
-		if (bAdmin)
-		{
-			new String:flags[32];
-			GetConVarString(cvar_BalanceAdmFlags, flags, sizeof(flags));
-			if (IsAdmin(client, flags))
-				return false;
-		}
+
 		if (bEngie)
 		{
 			if (TF2_HasBuilding(client))
 				return false;
+		}
+
+		if (bAdmin)
+		{
+			new String:flags[32],
+				bool:bSkip;
+			GetConVarString(cvar_BalanceAdmFlags, flags, sizeof(flags));
+			if (GetConVarFloat(cvar_BalanceImmunityCheck) > 0.0)
+			{
+				new	iTargets,
+					iImmune,
+					iTotal;
+				for (new i = 1; i <= MaxClients; i++)
+				{
+					if (IsClientInGame(i) && IsValidTeam(i))
+					{
+						if (IsAdmin(i, flags))
+						{
+							iImmune++;
+						}
+						else
+						{
+							iTargets++;
+						}
+					}
+				}
+				if (iImmune)
+				{
+					iTotal = iImmune + iTargets;
+					if (FloatDiv(float(iImmune), float(iTotal)) >= GetConVarFloat(cvar_BalanceImmunityCheck))
+					{
+						bSkip = true;
+					}
+				}
+				if (!bSkip && IsAdmin(client, flags))
+				{
+					return false;
+				}
+			}
 		}
 
 		if (g_bUseBuddySystem)
@@ -543,7 +580,7 @@ bool:IsClientValidBalanceTarget(client)
 				else if (IsValidTeam(g_aPlayers[client][iBuddy]))
 				{
 					LogAction(-1, 0, "Flagging client %L valid because of buddy preference", client);
-					return true;				
+					return true;
 				}
 			}		
 			if (IsClientBuddy(client))

@@ -2616,10 +2616,10 @@ bool:IsValidTarget(client, e_ImmunityModes:mode)
 				{
 					iTotal = iImmune + iTargets;
 					if (FloatDiv(float(iImmune), float(iTotal)) >= fPercent)
-						return true;
+						bSkip = true;
 				}
 			}
-			if (IsAdmin(client, flags))
+			if (!bSkip && IsAdmin(client, flags))
 				return false;
 		}
 		return true;
