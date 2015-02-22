@@ -466,7 +466,7 @@ RegCommands()
 	RegAdminCmd("sm_forcebalance",	cmd_Balance, ADMFLAG_GENERIC, "Forces a team balance if an imbalance exists.");
 	RegAdminCmd("sm_scramblevote",	cmd_Vote, ADMFLAG_GENERIC, "Start a vote. sm_scramblevote <now/end>");
 	
-	AddCommandListener(CMD_Listener, "say_team");
+	//AddCommandListener(CMD_Listener, "say_team"); commenting out since this does nothing, maybe i was going to check for donator commands?
 	AddCommandListener(CMD_Listener, "jointeam");
 	AddCommandListener(CMD_Listener, "spectate");
 	
@@ -509,15 +509,15 @@ public Action:CMD_Listener(client, const String:command[], argc)
 				{
 					GetCmdArgString(sArg, sizeof(sArg));
 				}
+				if (StrEqual(sArg, "blue", false) || StrEqual(sArg, "red", false) || StringToInt(sArg) >= 2)
+				{
+					if (TeamsUnbalanced(false)) //allow clients to change teams during imbalances
+					{
+						return Plugin_Continue;
+					}
+				}
 				if (IsBlocked(client))
 				{
-					if (StrEqual(sArg, "blue", false) || StrEqual(sArg, "red", false) || StringToInt(sArg) >= 2)
-					{
-						if (TeamsUnbalanced(false)) //allow clients to change teams during imbalances
-						{
-							return Plugin_Continue;
-						}
-					}
 					HandleStacker(client);
 					return Plugin_Handled;
 					
@@ -2437,7 +2437,7 @@ public Action:Event_PlayerDeath_Pre(Handle:event, const String:name[], bool:dont
 		return Plugin_Continue;	
 	}
 	
-	if (IsOkToBalance() && g_bAutoBalance && g_aTeams[bImbalanced] && GetClientTeam(v_client) == GetLargerTeam())	
+	if (g_bAutoBalance && IsOkToBalance() && g_aTeams[bImbalanced] && GetClientTeam(v_client) == GetLargerTeam())	
 	{
 		CreateTimer(0.1, timer_StartBalanceCheck, v_client, TIMER_FLAG_NO_MAPCHANGE);
 	}
