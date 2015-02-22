@@ -131,11 +131,7 @@ stock bool:TF2_IsClientUbered(client)
 		|| TF2_IsPlayerInCondition(client, TFCond_UberchargeFading)
 		|| TF2_IsPlayerInCondition(client, TFCond_UberBulletResist)
 		|| TF2_IsPlayerInCondition(client, TFCond_UberBlastResist)
-		|| TF2_IsPlayerInCondition(client, TFCond_UberFireResist)
-		|| TF2_IsPlayerInCondition(client, TFCond_BulletImmune)
-		|| TF2_IsPlayerInCondition(client, TFCond_BlastImmune)
-		|| TF2_IsPlayerInCondition(client, TFCond_FireImmune)
-		|| TF2_IsPlayerInCondition(client, TFCond_MegaHeal))
+		|| TF2_IsPlayerInCondition(client, TFCond_UberFireResist))
 	{
 		return true;
 	}

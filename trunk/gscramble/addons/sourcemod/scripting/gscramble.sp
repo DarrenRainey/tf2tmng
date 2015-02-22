@@ -488,6 +488,7 @@ public Action:CMD_Listener(client, const String:command[], argc)
 					GetConVarString(cvar_TeamswapAdmFlags, flags, sizeof(flags));
 					if (IsAdmin(client, flags))
 					{
+						CheckBalance(true);
 						return Plugin_Continue;
 					}
 				}
@@ -2449,7 +2450,8 @@ public Action:Event_PlayerDeath_Pre(Handle:event, const String:name[], bool:dont
 	
 	g_aPlayers[k_client][iFrags]++;
 	g_aPlayers[v_client][iDeaths]++;
-	GetClientTeam(k_client) == TEAM_RED ? (g_aTeams[iRedFrags]++) : (g_aTeams[iBluFrags]++);	
+	GetClientTeam(k_client) == TEAM_RED ? (g_aTeams[iRedFrags]++) : (g_aTeams[iBluFrags]++);
+	CheckBalance(true);
 	
 	return Plugin_Continue;
 }
@@ -2822,6 +2824,10 @@ stock GetPlayerPriority(client)
 	
 	if (IsClientInGame(client) && IsValidTeam(client))
 	{
+		new String:sFlags[32];
+		GetConVarString(cvar_BalanceAdmFlags, sFlags, sizeof(sFlags));
+		if (IsAdmin(client, sFlags))
+			return -20;
 		if (g_aPlayers[client][iBalanceTime] > GetTime())
 		{
 			return -5;

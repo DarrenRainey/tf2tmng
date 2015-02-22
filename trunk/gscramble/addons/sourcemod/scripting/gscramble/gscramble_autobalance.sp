@@ -190,14 +190,17 @@ CheckBalance(bool:post=false)
 	if (g_bBlockDeath)
 	{
 		#if defined DEBUG
-		LogToFile("gscramble.debug", "Ending checkbalance because scramble black death running");
+		LogToFile("gscramble.debug", "Ending checkbalance because scramble block death running");
 		#endif
 		return;
 	}
 		
 	if (post)
 	{
-		g_hCheckTimer = CreateTimer(0.1, timer_CheckBalance);
+		if (g_hCheckTimer == INVALID_HANDLE)
+		{
+			g_hCheckTimer = CreateTimer(0.5, timer_CheckBalance);
+		}
 		#if defined DEBUG
 		LogToFile("gscramble.debug", "running checkbalance timer");
 		#endif
