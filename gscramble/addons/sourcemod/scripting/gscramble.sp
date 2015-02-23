@@ -51,7 +51,7 @@ comment these 2 lines if you want to compile without them.
 #endif
 #define REQUIRE_PLUGIN
 
-#define VERSION "3.0.24"
+#define VERSION "3.0.25"
 #define TEAM_RED 2
 #define TEAM_BLUE 3
 #define SCRAMBLE_SOUND  "vo/announcer_am_teamscramble03.wav"
@@ -1169,7 +1169,7 @@ hook()
 	HookEvent("player_sapped_object", hook_Sapper, EventHookMode_Post);
 	HookEvent("medic_death", hook_MedicDeath, EventHookMode_Post);
 	HookEvent("controlpoint_endtouch", hook_EndTouch, EventHookMode_Post);	
-	HookEvent("teamplay_timer_time_added", TimerUpdateAdd, EventHookMode_Post);
+	HookEvent("teamplay_timer_time_added", TimerUpdateAdd, EventHookMode_PostNoCopy);
 	g_bHooked = true;
 }
 
@@ -1204,7 +1204,7 @@ unHook()
 	UnhookEvent("player_sapped_object", hook_Sapper, EventHookMode_Post);
 	UnhookEvent("medic_death", hook_MedicDeath, EventHookMode_Post);
 	UnhookEvent("controlpoint_endtouch", hook_EndTouch, EventHookMode_Post);
-	UnhookEvent("teamplay_timer_time_added", TimerUpdateAdd, EventHookMode_Post);
+	UnhookEvent("teamplay_timer_time_added", TimerUpdateAdd, EventHookMode_PostNoCopy);
 	UnhookEvent("teamplay_pre_round_time_left",			hookPreRound, EventHookMode_PostNoCopy);
 
 	g_bHooked = false;
@@ -2419,18 +2419,18 @@ public Event_RoundWin(Handle:event, const String:name[], bool:dontBroadcast)
 }
 
 public Action:Event_PlayerDeath_Pre(Handle:event, const String:name[], bool:dontBroadcast) 
-{	
+{
+	if (g_bBlockDeath) 
+	{
+		return Plugin_Handled;
+	}
+	
 	new k_client = GetClientOfUserId(GetEventInt(event, "attacker"));
 	new	v_client = GetClientOfUserId(GetEventInt(event, "userid"));
 	
 	if (k_client && IsClientInGame(k_client) && k_client != v_client && g_bBlockDeath)
 	{
 		g_bBlockDeath = false;
-	}
-	
-	if (g_bBlockDeath) 
-	{
-		return Plugin_Handled;
 	}
 	
 	if (g_RoundState != normal || GetEventInt(event, "death_flags") & 32) 
@@ -2771,7 +2771,7 @@ public Action:Timer_GetTime(Handle:timer)
 
 public TimerUpdateAdd(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (GetConVarBool(cvar_RoundTime))
+	if (GetConVarInt(cvar_BalanceTimeLimit) > 0)
 	{
 		GetRoundTimerInformation();
 		CheckBalance(true);
