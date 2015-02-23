@@ -734,7 +734,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 
 public Action:Timer_load(Handle:timer)
 {
-	g_RoundState = setup;
+	g_RoundState = normal;
 	CreateTimer(1.0, Timer_GetTime);
 	for (new i = 1; i <= MaxClients; i++)
 	{
@@ -1280,6 +1280,8 @@ public hook_GameEnd(Handle:event, const String:name[], bool:dontBroadcast)
 
 public hook_PointCaptured(Handle:event, const String:name[], bool:dontBroadcast)
 {
+	if (GetConVarBool(cvar_BalanceTimeLimit))
+		GetRoundTimerInformation(true);
 	if (g_iTeamworkProtection)
 	{
 		decl String:cappers[128];
@@ -2346,7 +2348,7 @@ public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 	*/
 	if (g_RoundState != preGame)
 	{
-		CreateTimer(0.1, Timer_GetTime, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(0.5, Timer_GetTime, TIMER_FLAG_NO_MAPCHANGE);
 	}
 	
 	g_iRoundStartTime = GetTime();
@@ -2762,7 +2764,7 @@ public Action:Timer_GetTime(Handle:timer)
 		g_RoundState = normal;
 		g_bIsTimer = false;
 	}*/
-	if (g_RoundState == normal && g_hRoundTimeTick != INVALID_HANDLE)
+	if (g_hRoundTimeTick != INVALID_HANDLE)
 	{		
 		g_hRoundTimeTick = CreateTimer(15.0, Timer_Countdown, _, TIMER_REPEAT);
 	}

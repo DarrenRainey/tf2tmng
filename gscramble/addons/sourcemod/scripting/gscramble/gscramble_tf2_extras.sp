@@ -32,8 +32,13 @@ $Copyright: (c) Tf2Tmng 2009-2015$
 *************************************************************************
 *************************************************************************
 */
-stock GetRoundTimerInformation()
+stock GetRoundTimerInformation(bool delay = false)
 {
+	if (delay)
+	{
+		CreateTimer(0.5, TimerRoundTimer);
+		return;
+	}
 	#if defined DEBUG
 	LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "calling Round Timer Function");
 	#endif
@@ -48,14 +53,14 @@ stock GetRoundTimerInformation()
 		//Make sure this timer is enabled
 		timer_is_paused = bool:GetEntProp(round_timer, Prop_Send, "m_bTimerPaused");
 		timer_is_disabled = bool:GetEntProp(round_timer, Prop_Send, "m_bIsDisabled");
-		// look for more timers?
+		/** dont think i need this anymore
 		if (timer_is_disabled || timer_is_paused)
 		{
 			#if defined DEBUG
 			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "paused or disabled timer ent");
 			#endif
 			continue;
-		}
+		}*/
 		//End time is what we're interested in... fortunately, it works
 		// (getting the current time remaining does NOT work as of late November 2010)
 		timer_end_time = GetEntPropFloat(round_timer, Prop_Send, "m_flTimerEndTime");
@@ -68,7 +73,6 @@ stock GetRoundTimerInformation()
 			found_valid_timer = true;
 		}
 	}
-
 	if (found_valid_timer) {
 		g_fRoundEndTime = best_end_time;
 		g_bRoundIsTimed = true;
@@ -80,6 +84,12 @@ stock GetRoundTimerInformation()
 		g_bRoundIsTimed = false;
 	}
 }
+
+public Action:TimerRoundTimer(Handle:timer)
+{
+	GetRoundTimerInformation();
+}
+
 
 public TF2_GetRoundTimeLeft(Handle:plugin, numparams)
 {
