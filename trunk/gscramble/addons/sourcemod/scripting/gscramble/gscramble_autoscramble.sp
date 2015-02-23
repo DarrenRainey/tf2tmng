@@ -684,7 +684,7 @@ Float:GetClientScrambleScore(client, e_ScrambleModes:mode)
 		case score:
 		{
 			#if defined DEBUG
-			LogToFile("gscramble.debug.txt", "GRABBING TOTAL SCORE");
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "GRABBING TOTAL SCORE");
 			#endif		
 			
 			return float(Totalscore);
@@ -785,7 +785,7 @@ stock ScramblePlayers(e_ScrambleModes:scrambleMode)
 			else
 			{
 				#if defined DEBUG
-				LogToFile("gscramble.debug.txt", "Found a scramble immune person");
+				LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Found a scramble immune person");
 				#endif
 				if (GetClientTeam(i) == TEAM_RED)
 				{
@@ -840,9 +840,9 @@ stock ScramblePlayers(e_ScrambleModes:scrambleMode)
 		// print the array bore and after sorting
 		for (i = 0; i < iCount; i++)
 		{
-			LogToFile("gscramble.debug.txt", "%f %f", scoreArray[i][0], scoreArray[i][1]);
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "%f %f", scoreArray[i][0], scoreArray[i][1]);
 		}
-		LogToFile("gscramble.debug.txt", "---------------------------");
+		LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "---------------------------");
 		#endif
 		
 		/** 
@@ -855,9 +855,9 @@ stock ScramblePlayers(e_ScrambleModes:scrambleMode)
 		// print the array bore and after sorting
 		for (i = 0; i < iCount; i++)
 		{
-			LogToFile("gscramble.debug.txt", "%f %f", scoreArray[i][0], scoreArray[i][1]);
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "%f %f", scoreArray[i][0], scoreArray[i][1]);
 		}
-		LogToFile("gscramble.debug.txt", "---------------------------\nEND\n");
+		LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "---------------------------\nEND\n");
 		#endif
 		
 		for (i = 0; i < iCount; i++)

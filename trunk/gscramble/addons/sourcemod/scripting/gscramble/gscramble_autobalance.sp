@@ -166,7 +166,7 @@ CheckBalance(bool:post=false)
 	if (!g_bHooked)
 	{
 		#if defined DEBUG
-		LogToFile("gscramble.debug", "Ending checkbalance because not hooked");
+		LogToFile("addons/sourcemod/logs/gscramble.debug_spammy.txt", "Ending checkbalance because not hooked");
 		#endif
 		return;
 	}
@@ -174,7 +174,7 @@ CheckBalance(bool:post=false)
 	if (g_hCheckTimer != INVALID_HANDLE)
 	{
 		#if defined DEBUG
-		LogToFile("gscramble.debug", "Ending checkbalance because checktimer running");
+		LogToFile("addons/sourcemod/logs/gscramble.debug_spammy.txt", "Ending checkbalance because checktimer running");
 		#endif
 		return;
 	}
@@ -182,7 +182,7 @@ CheckBalance(bool:post=false)
 	if (!g_bAutoBalance)
 	{
 		#if defined DEBUG
-		LogToFile("gscramble.debug", "Ending checkbalance because ab flag set false");
+		LogToFile("addons/sourcemod/logs/gscramble.debug_spammy.txt", "Ending checkbalance because ab flag set false");
 		#endif
 		return;
 	}
@@ -190,7 +190,7 @@ CheckBalance(bool:post=false)
 	if (g_bBlockDeath)
 	{
 		#if defined DEBUG
-		LogToFile("gscramble.debug", "Ending checkbalance because scramble block death running");
+		LogToFile("addons/sourcemod/logs/gscramble.debug_spammy.txt", "Ending checkbalance because scramble block death running");
 		#endif
 		return;
 	}
@@ -202,7 +202,7 @@ CheckBalance(bool:post=false)
 			g_hCheckTimer = CreateTimer(0.5, timer_CheckBalance);
 		}
 		#if defined DEBUG
-		LogToFile("gscramble.debug", "running checkbalance timer");
+		LogToFile("addons/sourcemod/logs/gscramble.debug_spammy.txt", "running checkbalance timer");
 		#endif
 		return;
 	}
@@ -408,7 +408,7 @@ stock bool:IsOkToBalance()
 			if ((g_fRoundEndTime - GetGameTime()) < float(iBalanceTimeLimit))
 			{
 			#if defined DEBUG
-			LogToFile("gscramble.debug.txt", "disabling due to balance time");
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "disabling due to balance time");
 			#endif
 				return false;
 			}
@@ -416,12 +416,12 @@ stock bool:IsOkToBalance()
 		
 		new Float:fProgress = GetConVarFloat(cvar_ProgressDisable);
 		#if defined DEBUG
-		LogToFile("gscramble.debug.txt", "Progress = %f", g_fEscortProgress);
+		LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Progress = %f", GetCartProgress());
 		#endif
 		if (fProgress > 0.0 && GetCartProgress() >= fProgress)
 		{
 			#if defined DEBUG
-			LogToFile("gscramble.debug.txt", "disabling due to cart progress");
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "disabling due to cart progress");
 			#endif
 			return false;
 		}
@@ -433,7 +433,7 @@ stock bool:IsOkToBalance()
 		case suddenDeath:
 		{
 			#if defined DEBUG
-			LogToFile("gscramble.debug.txt", "disabling due to roundstate suddendeath");
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "disabling due to roundstate suddendeath");
 			#endif
 			return false;
 		}
@@ -441,7 +441,7 @@ stock bool:IsOkToBalance()
 		case preGame:
 		{
 			#if defined DEBUG
-			LogToFile("gscramble.debug.txt", "disabling due to roundstate pregame");
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "disabling due to roundstate pregame");
 			#endif
 			return false;
 		}
@@ -449,7 +449,7 @@ stock bool:IsOkToBalance()
 		case setup:
 		{
 			#if defined DEBUG
-			LogToFile("gscramble.debug.txt", "disabling due to roundstate setup");
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "disabling due to roundstate setup");
 			#endif
 			return false;
 		}
@@ -457,7 +457,7 @@ stock bool:IsOkToBalance()
 		case bonusRound:
 		{
 			#if defined DEBUG
-			LogToFile("gscramble.debug.txt", "disabling due to roundstate bonusround");
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "disabling due to roundstate bonusround");
 			#endif
 			return false;
 		}

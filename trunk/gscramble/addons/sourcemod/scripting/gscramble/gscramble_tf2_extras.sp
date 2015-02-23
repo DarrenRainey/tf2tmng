@@ -34,6 +34,9 @@ $Copyright: (c) Tf2Tmng 2009-2015$
 */
 stock GetRoundTimerInformation()
 {
+	#if defined DEBUG
+	LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "calling Round Timer Function");
+	#endif
 	new round_timer = -1;
 	new Float:best_end_time = 1000000000000.0;    //a very large "time"
 	new Float:timer_end_time;
@@ -45,10 +48,20 @@ stock GetRoundTimerInformation()
 		//Make sure this timer is enabled
 		timer_is_paused = bool:GetEntProp(round_timer, Prop_Send, "m_bTimerPaused");
 		timer_is_disabled = bool:GetEntProp(round_timer, Prop_Send, "m_bIsDisabled");
-		
+		// look for more timers?
+		if (timer_is_disabled || timer_is_paused)
+		{
+			#if defined DEBUG
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "paused or disabled timer ent");
+			#endif
+			continue;
+		}
 		//End time is what we're interested in... fortunately, it works
 		// (getting the current time remaining does NOT work as of late November 2010)
 		timer_end_time = GetEntPropFloat(round_timer, Prop_Send, "m_flTimerEndTime");
+		#if defined DEBUG
+		LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "TIME %i", RoundFloat(timer_end_time));
+		#endif
 		
 		if (!timer_is_paused && !timer_is_disabled && (timer_end_time <= best_end_time || !found_valid_timer)) {
 			best_end_time = timer_end_time;
@@ -57,12 +70,12 @@ stock GetRoundTimerInformation()
 	}
 
 	if (found_valid_timer) {
-	#if defined DEBUG
-	LogToFile("gscramble.debug.txt", "%i", RoundFloat(g_fRoundEndTime - GetGameTime()));
-	#endif
 		g_fRoundEndTime = best_end_time;
 		g_bRoundIsTimed = true;
 	} else {
+		#if defined DEBUG
+		LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "no timer ent found?");
+		#endif
 		g_RoundState = normal;
 		g_bRoundIsTimed = false;
 	}
@@ -133,6 +146,9 @@ stock bool:TF2_IsClientUbered(client)
 		|| TF2_IsPlayerInCondition(client, TFCond_UberBlastResist)
 		|| TF2_IsPlayerInCondition(client, TFCond_UberFireResist))
 	{
+		#if defined DEBUG
+		LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Found Ubercond player");
+		#endif
 		return true;
 	}
 	
