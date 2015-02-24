@@ -597,3 +597,101 @@ bool:IsClientValidBalanceTarget(client)
 	}
 	return false;
 }
+
+/**
+* Prioritize people based on active buildings, ubercharge, living/dead, or connection time
+* used for the force-balance function
+*/
+stock GetPlayerPriority(client)
+{
+	if (IsFakeClient(client))
+	{
+		return 0;
+	}
+	new iPriority;
+	if (TF2_IsPlayerInDuel(client))
+	{
+		iPriority -=10;
+	}
+	
+	if (g_bUseBuddySystem)
+	{
+		if (g_aPlayers[client][iBuddy])
+		{
+			if (GetClientTeam(client) == GetClientTeam(g_aPlayers[client][iBuddy]))
+			{
+				iPriority -=10;
+			}
+			else if (IsValidTeam(g_aPlayers[client][iBuddy]))
+			{
+				iPriority += 20;
+			}
+		}
+		
+		if (IsClientBuddy(client))
+		{
+			iPriority -=10;
+		}
+	}
+	
+	
+	if (IsClientInGame(client) && IsValidTeam(client))
+	{
+		new String:sFlags[32];
+		GetConVarString(cvar_BalanceAdmFlags, sFlags, sizeof(sFlags));
+		if (IsAdmin(client, sFlags))
+			iPriority -=20;
+		if (g_aPlayers[client][iBalanceTime] > GetTime())
+		{
+			iPriority -=5;
+		}
+		
+		if (g_aPlayers[client][iTeamworkTime] >= GetTime())
+		{
+			iPriority -= 3;
+		}
+		
+		if (g_RoundState != bonusRound)
+		{
+			if (TF2_HasBuilding(client)||DoesClientHaveIntel(client)||TF2_IsClientUberCharged(client)||TF2_IsClientUbered(client)|| !IsNotTopPlayer(client, GetClientTeam(client))||TF2_IsClientOnlyMedic(client))
+			{
+				iPriority -=15;
+			}
+			
+			if (!IsPlayerAlive(client))
+			{
+				iPriority += 5;
+			}
+			else
+			{
+				if (g_aPlayers[client][bHasFlag])
+				{
+					iPriority -= 20;
+				}
+				
+				iPriority -= 3;
+			}
+		}		
+		/**
+		make new clients more likely to get swapped
+		*/
+		if (GetClientTime(client) < 180)
+		{
+			iPriority += 5;	
+		}
+	}
+	
+	return iPriority;
+}
+
+bool:IsValidTeam(client)
+{
+	new team = GetClientTeam(client);
+	
+	if (team == TEAM_RED || team == TEAM_BLUE)
+	{
+		return true;
+	}
+	
+	return false;
+}	

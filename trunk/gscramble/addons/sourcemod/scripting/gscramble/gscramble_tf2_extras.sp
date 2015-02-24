@@ -91,6 +91,7 @@ public Action:TimerRoundTimer(Handle:timer)
 }
 
 
+/*
 public TF2_GetRoundTimeLeft(Handle:plugin, numparams)
 {
 	if (g_RoundState == normal && g_bRoundIsTimed)
@@ -98,13 +99,28 @@ public TF2_GetRoundTimeLeft(Handle:plugin, numparams)
 		return RoundFloat(GetGameTime() - g_fRoundEndTime);
 	}
 	else return 0;
-}
+}*/
 
 stock bool:TF2_HasBuilding(client)
 {
 	if (TF2_ClientBuilding(client, "obj_*"))
 	{
 		return true;
+	}
+	
+	return false;
+}
+
+stock bool:TF2_ClientBuilding(client, const String:building[])
+{
+	new iEnt = -1;
+	
+	while ((iEnt = FindEntityByClassname(iEnt, building)) != -1)
+	{
+		if (GetEntDataEnt2(iEnt, FindSendPropInfo("CBaseObject", "m_hBuilder")) == client)
+		{
+			return true;
+		}
 	}
 	
 	return false;
@@ -160,21 +176,6 @@ stock bool:TF2_IsClientUbered(client)
 		LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Found Ubercond player");
 		#endif
 		return true;
-	}
-	
-	return false;
-}
-
-stock bool:TF2_ClientBuilding(client, const String:building[])
-{
-	new iEnt = -1;
-	
-	while ((iEnt = FindEntityByClassname(iEnt, building)) != -1)
-	{
-		if (GetEntDataEnt2(iEnt, FindSendPropInfo("CBaseObject", "m_hBuilder")) == client)
-		{
-			return true;
-		}
 	}
 	
 	return false;
