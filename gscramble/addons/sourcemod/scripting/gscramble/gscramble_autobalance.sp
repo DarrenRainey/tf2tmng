@@ -86,7 +86,7 @@ bool:BalancePlayer(client)
 	
 	if (!overrider)
 	{
-		if (!IsClientValidBalanceTarget(client) || GetPlayerPriority(client) < 0)
+		if (!IsClientValidBalanceTarget(client) /*|| GetPlayerPriority(client) < 0*/)
 		{
 			return false;	
 		}
@@ -229,6 +229,11 @@ CheckBalance(bool:post=false)
 	}
 	else
 	{
+		if (g_hForceBalanceTimer != INVALID_HANDLE)
+		{
+			KillTimer(g_hForceBalanceTimer);
+			g_hForceBalanceTimer = INVALID_HANDLE;
+		}
 		g_aTeams[bImbalanced] = false;
 		if (g_hBalanceFlagTimer != INVALID_HANDLE)
 		{
@@ -480,7 +485,7 @@ public Action:Timer_BalanceSpawn(Handle:timer, any:id)
 	return Plugin_Handled;
 }
 
-bool:IsClientValidBalanceTarget(client)
+bool IsClientValidBalanceTarget(client)
 {
 	if (IsClientInGame(client) && IsValidTeam(client))
 	{
@@ -492,17 +497,39 @@ bool:IsClientValidBalanceTarget(client)
 			}
 			return true;
 		}
+		
+		if (g_aPlayers[client][iBalanceTime] > GetTime())
+		{
+			return false;
+		}
+		
+		if (GetConVarBool(cvar_TeamworkProtect) && g_aPlayers[client][iTeamworkTime] >= GetTime())
+		{
+			#if defined DEBUG
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Flagging immune: teamwork protection");
+			#endif
+			return false;
+		}
+		
 		// hard coded protections no one wants to be swapped carrying objective or while ubered
 		if (TF2_IsClientUberCharged(client) || TF2_IsClientUbered(client) || DoesClientHaveIntel(client))
 			return false;
 
 		if (GetConVarInt(cvar_TopProtect) && !IsNotTopPlayer(client, GetClientTeam(client)))
 		{
+			#if defined DEBUG
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Flagging immune top protect");
+			#endif
 			return false;
 		}
 		
-		if (GetConVarBool(cvar_ProtectOnlyMedic) && !TF2_IsClientOnlyMedic(client))
+		if (GetConVarBool(cvar_ProtectOnlyMedic) && TF2_IsClientOnlyMedic(client))
+		{
+			#if defined DEBUG
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Flagging immune only medic");
+			#endif
 			return false;
+		}
 		
 		new iImmunity = e_Protection:GetConVarInt(cvar_BalanceImmunity),
 			bool:bAdmin = false,
@@ -511,14 +538,23 @@ bool:IsClientValidBalanceTarget(client)
 		{
 			case admin:
 			{
+				#if defined DEBUG
+				LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Balance var read: admin");
+				#endif
 				bAdmin = true;
 			}
 			case uberAndBuildings:
 			{
+				#if defined DEBUG
+				LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Balance var read: engie with buildings");
+				#endif
 				bEngie = true;
 			}
 			case both:
 			{
+				#if defined DEBUG
+				LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Balance var read: Both engie + admin");
+				#endif
 				bAdmin = true;
 				bEngie = true;
 			}
@@ -527,7 +563,12 @@ bool:IsClientValidBalanceTarget(client)
 		if (bEngie)
 		{
 			if (TF2_HasBuilding(client))
+			{
+				#if defined DEBUG
+				LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Detected building, flagging false");
+				#endif
 				return false;
+			}
 		}
 
 		if (bAdmin)
@@ -564,6 +605,9 @@ bool:IsClientValidBalanceTarget(client)
 				}
 				if (!bSkip && IsAdmin(client, flags))
 				{
+					#if defined DEBUG
+					LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Detected admin: flagging false");
+					#endif
 					return false;
 				}
 			}
@@ -609,7 +653,7 @@ stock GetPlayerPriority(client)
 		return 0;
 	}
 	new iPriority;
-	if (TF2_IsPlayerInDuel(client))
+	if (GetConVarBool(cvar_BalanceDuelImmunity) && TF2_IsPlayerInDuel(client))
 	{
 		iPriority -=10;
 	}
@@ -643,19 +687,19 @@ stock GetPlayerPriority(client)
 			iPriority -=20;
 		if (g_aPlayers[client][iBalanceTime] > GetTime())
 		{
-			iPriority -=5;
+			iPriority -=20;
 		}
 		
 		if (g_aPlayers[client][iTeamworkTime] >= GetTime())
 		{
-			iPriority -= 3;
+			iPriority -= 20;
 		}
 		
 		if (g_RoundState != bonusRound)
 		{
 			if (TF2_HasBuilding(client)||DoesClientHaveIntel(client)||TF2_IsClientUberCharged(client)||TF2_IsClientUbered(client)|| !IsNotTopPlayer(client, GetClientTeam(client))||TF2_IsClientOnlyMedic(client))
 			{
-				iPriority -=15;
+				iPriority -=20;
 			}
 			
 			if (!IsPlayerAlive(client))
@@ -669,7 +713,7 @@ stock GetPlayerPriority(client)
 					iPriority -= 20;
 				}
 				
-				iPriority -= 3;
+				iPriority += 1;
 			}
 		}		
 		/**
@@ -677,7 +721,7 @@ stock GetPlayerPriority(client)
 		*/
 		if (GetClientTime(client) < 180)
 		{
-			iPriority += 5;	
+			iPriority += 1;	
 		}
 	}
 	

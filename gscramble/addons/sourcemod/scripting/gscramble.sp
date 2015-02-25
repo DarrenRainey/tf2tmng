@@ -51,7 +51,7 @@ comment these 2 lines if you want to compile without them.
 #endif
 #define REQUIRE_PLUGIN
 
-#define VERSION "3.0.25"
+#define VERSION "3.0.26"
 #define TEAM_RED 2
 #define TEAM_BLUE 3
 #define SCRAMBLE_SOUND  "vo/announcer_am_teamscramble03.wav"
@@ -330,7 +330,7 @@ public OnPluginStart()
 	cvar_BalanceTime		= 	CreateConVar("gs_ab_balancetime",	"5",			"Time in minutes after a client is balanced in which they cannot be balanced again.", FCVAR_PLUGIN);
 	cvar_BalanceLimit		=	CreateConVar("gs_ab_unbalancelimit",	"2",	"If one team has this many more players than the other, then consider the teams imbalanced.", FCVAR_PLUGIN);
 	cvar_BalanceImmunity 	=	CreateConVar("gs_ab_immunity",			"2",	"Controls who is immune from auto-balance\n0 = no immunity\n1 = admins\n2 = engies with buildings\n3 = both admins and engies with buildings", FCVAR_PLUGIN, true, 0.0, true, 3.0);
-	cvar_MaxUnbalanceTime	= CreateConVar("gs_ab_max_unbalancetime", "30", "Max time the teams are allowed to be unbalanced before a balanced is forced on living players.\n0 = disabled.", FCVAR_PLUGIN, true, 0.0, false); 
+	cvar_MaxUnbalanceTime	= CreateConVar("gs_ab_max_unbalancetime", "120", "Max time the teams are allowed to be unbalanced before a balanced is forced on living players.\n0 = disabled.", FCVAR_PLUGIN, true, 0.0, false); 
 	cvar_Preference			= CreateConVar("gs_ab_preference",		"1",	"Allow clients to tell the plugin what team they prefer.  When an autobalance starts, if the client prefers the team, it overrides any immunity check.", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BalanceActionDelay = CreateConVar("gs_ab_actiondelay",		"5", 	"Time, in seconds after an imbalance is detected in which an imbalance is flagged, and possible swapping can occur", FCVAR_PLUGIN, true, 0.0, false);
 	cvar_ForceBalanceTrigger = CreateConVar("gs_ab_forcetrigger",	"4",	"If teams become imbalanced by this many players, auto-force a balance", FCVAR_PLUGIN, true, 0.0, false);
@@ -2783,6 +2783,9 @@ public TimerUpdateAdd(Handle:event, const String:name[], bool:dontBroadcast)
 
 public Action:Timer_Countdown(Handle:timer)
 {
+	#if defined DEBUG
+	LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "countdown timer ticking");
+	#endif
 	GetRoundTimerInformation();
 	return Plugin_Continue;
 }
