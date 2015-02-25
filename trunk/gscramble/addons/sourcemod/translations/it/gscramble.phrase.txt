@@ -203,4 +203,18 @@
 	{
 		"it"		"Parametro non valido."
 	}
+	"StatsMessage"
+	{
+		"#format"	"{1:i},{2:i},{3:s}"
+		"it"		"Scramble scambiato {1} di {2} giocatori. {3}%"
+	}
+	"ForceMessage"
+	{
+		"it"		"Le squadre sono ora in fase di forza bilanciata. Amministratori / donatori possono essere, ma è improbabile che siano scambiati."
+	}
+	"ImmunityDisabled"
+	{
+		"#format"	"{1:i}"
+		"it"		"Controlli Admin / donatori sono ora disabilitati perché oltre il %{1} del server è impostato per essere immune."
+	}
 }

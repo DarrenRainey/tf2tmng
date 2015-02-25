@@ -33,6 +33,8 @@ $Copyright: (c) Tf2Tmng 2009-2015$
 *************************************************************************
 */
 
+new g_iImmunityDisabledWarningTime;
+
 stock GetLargerTeam()
 {
 	if (GetTeamClientCount(TEAM_RED) > GetTeamClientCount(TEAM_BLUE))
@@ -153,6 +155,8 @@ public Action:Timer_ForceBalance(Handle:timer)
 	
 	if (TeamsUnbalanced(false))
 	{
+		if (!g_bSilent)
+			PrintToChatAll("\x01\x04[SM]\x01 %t", "ForceMessage");
 		BalanceTeams(true);
 	}
 	
@@ -606,9 +610,16 @@ bool IsClientValidBalanceTarget(client)
 				}
 				if (iImmune)
 				{
+					float fPercent;
 					iTotal = iImmune + iTargets;
-					if (FloatDiv(float(iImmune), float(iTotal)) >= GetConVarFloat(cvar_BalanceImmunityCheck))
+					fPercent = FloatDiv(float(iImmune), float(iTotal));
+					if (fPercent >= GetConVarFloat(cvar_BalanceImmunityCheck))
 					{
+						if (!g_bSilent && (GetTime() - g_iImmunityDisabledWarningTime) > 300)
+						{
+							PrintToChatAll("\x01\x04[SM]\x01 %t", "ImmunityDisabled", RoundFloat(fPercent));
+							g_iImmunityDisabledWarningTime = GetTime();
+						}
 						bSkip = true;
 					}
 				}
