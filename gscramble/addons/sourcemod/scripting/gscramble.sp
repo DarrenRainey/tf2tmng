@@ -1626,6 +1626,7 @@ public OnMapStart()
 	* reset most of what we track with this plugin
 	* team wins, frags, gamestate... ect
 	*/
+	g_iImmunityDisabledWarningTime = 0;
 	g_bTeamsLocked = false;
 	g_bScrambledThisRound = false;
 	g_bScrambleOverride = false;

@@ -245,4 +245,18 @@
 	{
 		"pl"		    "Nieprawidłowa wartość komendy."
 	}
+	"StatsMessage"
+	{
+		"#format"	"{1:i},{2:i},{3:s}"
+		"pl"		"Scramble zamienione {1} z {2} graczy. {3}%."
+	}
+	"ForceMessage"
+	{
+		"pl"		"Drużyny są obecnie siłą wyważone . Admini / Dawcy mogą być, ale jest mało prawdopodobne , aby zostać zamienione."
+	}
+	"ImmunityDisabled"
+	{
+		"#format"	"{1:i}"
+		"pl"		"Kontrole admin / dawcy są teraz wyłączone , ponieważ w ciągu %{1} zserwera ustawiony jest odporny."
+	}
 }

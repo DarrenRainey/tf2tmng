@@ -102,7 +102,7 @@
 	}	
 	"CancelScramble"
 	{
-		"en"		"Canceled the pending scramble."
+		"en"		"Cancelled the pending scramble."
 	}
 	"PrefAnnounce"
 	{
@@ -267,5 +267,14 @@
 	{
 		"#format"	"{1:i},{2:i},{3:s}"
 		"en"		"Scramble swapped {1} out of {2} players. {3}%"
+	}
+	"ForceMessage"
+	{
+		"en"		"Teams are now being force-balanced. Admins/Donors may be, but are unlikely to be swapped."
+	}
+	"ImmunityDisabled"
+	{
+		"#format"	"{1:i}"
+		"en"		"Admin/Donor checks are now disabled because over %{1} of the server is set to be immune."
 	}
 }
