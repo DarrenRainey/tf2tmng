@@ -69,7 +69,7 @@ bool:BalancePlayer(client)
 	team = big == TEAM_RED?TEAM_BLUE:TEAM_RED;
 	
 	/**
-	checks for preferences to override the client so 
+	checks for preferences to override the client. will grab any client that stated a prefence regardless of status.
 	*/
 	if (GetConVarBool(cvar_Preference))
 	{
@@ -497,6 +497,15 @@ bool IsClientValidBalanceTarget(client)
 			}
 			return true;
 		}
+
+	// allow client's team prefence to override balance check
+		if (GetConVarBool(cvar_Preference))
+		{
+			new big = GetLargerTeam(),
+				pref = g_aPlayers[client][iTeamPreference];
+			if (pref && pref != big)
+				return true;
+		}
 		
 		if (g_aPlayers[client][iBalanceTime] > GetTime())
 		{
@@ -653,6 +662,13 @@ stock GetPlayerPriority(client)
 		return 0;
 	}
 	new iPriority;
+	if (!IsClientValidBalanceTarget(client))
+		iPriority -=25;
+	if (!IsPlayerAlive(client))
+	{
+		iPriority += 5;
+	}
+	/*
 	if (GetConVarBool(cvar_BalanceDuelImmunity) && TF2_IsPlayerInDuel(client))
 	{
 		iPriority -=10;
@@ -716,15 +732,13 @@ stock GetPlayerPriority(client)
 				iPriority += 1;
 			}
 		}		
-		/**
+		
 		make new clients more likely to get swapped
 		*/
-		if (GetClientTime(client) < 180)
-		{
-			iPriority += 1;	
-		}
+	if (GetClientTime(client) < 180)
+	{
+		iPriority += 5;	
 	}
-	
 	return iPriority;
 }
 
