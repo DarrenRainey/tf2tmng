@@ -422,8 +422,18 @@ public Action:timer_ScrambleDelay(Handle:timer, any:data)  // scramble logic
 		TF2_ResetSetup();
 	}
 	
+	// Fire le event
+	FireScrambleEvent();
 	return Plugin_Handled;
 }
+
+FireScrambleEvent()
+{
+	new Handle:event = CreateEvent("teamplay_alert");
+	SetEventInt(event, "alert_type", 0);
+	FireEvent(event);
+}
+	
 
 stock PerformTopSwap()
 {
