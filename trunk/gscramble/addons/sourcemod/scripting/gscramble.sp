@@ -51,7 +51,7 @@ comment these 2 lines if you want to compile without them.
 #endif
 #define REQUIRE_PLUGIN
 
-#define VERSION "3.0.26"
+#define VERSION "3.0.27"
 #define TEAM_RED 2
 #define TEAM_BLUE 3
 #define SCRAMBLE_SOUND  "vo/announcer_am_teamscramble03.wav"
@@ -918,10 +918,18 @@ public OnConfigsExecuted()
 	
 	//shut off tf2's built in auto-scramble
 	//if gscramble's auto modes are enabled.
-	if (bAuto && GetConVarBool(FindConVar("mp_scrambleteams_auto")))
+	if (bAuto)
 	{
-		SetConVarBool(FindConVar("mp_scrambleteams_auto"), false);
-		LogMessage("Setting mp_scrambleteams_auto false");
+		if (GetConVarBool(FindConVar("mp_scrambleteams_auto")))
+		{
+			SetConVarBool(FindConVar("mp_scrambleteams_auto"), false);
+			LogMessage("Setting mp_scrambleteams_auto false");
+		}
+		if (GetConVarBool(FindConVar("sv_vote_issue_scramble_teams_allowed")))
+		{
+			SetConVarBool(FindConVar("sv_vote_issue_scramble_teams_allowed"), false);
+			LogMessage("Setting 'sv_vote_issue_scramble_teams_allowed' to '0'");
+		}
 	}
 	
 	if (GetConVarBool(cvar_Koth) && strncmp(sMapName, "koth_", 5, false) == 0)
