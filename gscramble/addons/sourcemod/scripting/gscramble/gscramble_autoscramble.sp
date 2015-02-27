@@ -460,7 +460,7 @@ stock PerformTopSwap()
 	}
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientInGame(i) && IsValidTarget(i, scramble))
+		if (IsClientInGame(i) && IsValidTarget(i))
 		{
 			if (GetClientTeam(i) == TEAM_RED)
 			{
@@ -787,7 +787,7 @@ stock ScramblePlayers(e_ScrambleModes:scrambleMode)
 	{
 		if (IsClientInGame(i) && (IsValidTeam(i) || IsValidSpectator(i)))
 		{
-			if (IsValidTarget(i, scramble))
+			if (IsValidTarget(i))
 			{
 				iValidPlayers[iCount] = i;
 				iCount++;
@@ -884,7 +884,7 @@ stock ScramblePlayers(e_ScrambleModes:scrambleMode)
 		{
 			if (IsClientInGame(i) && IsValidTeam(i))
 			{
-				if (IsValidTarget(i, scramble))
+				if (IsValidTarget(i))
 				{
 					iValidPlayers[iCount] = i;
 					iCount++;
@@ -963,7 +963,7 @@ stock bool DisableScrambleImmunityCheck()
 	{
 		if (IsClientInGame(i))
 		{
-			if (IsValidTarget(i, scramble))
+			if (IsValidTarget(i))
 				iValidTotal++;
 			else
 				iImmuneTotal++;

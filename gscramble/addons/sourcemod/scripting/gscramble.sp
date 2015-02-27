@@ -2536,10 +2536,9 @@ bool:IsClientBuddy(client)
 	return false;
 }
 
-bool:IsValidTarget(client, e_ImmunityModes:mode)
+bool:IsValidTarget(client)
 {
-
-	if ((mode == scramble && GetConVarBool(cvar_ScrambleDuelImmunity)))
+	if (GetConVarBool(cvar_ScrambleDuelImmunity))
 	{
 		if (TF2_IsPlayerInDuel(client))
 		{
@@ -2549,15 +2548,13 @@ bool:IsValidTarget(client, e_ImmunityModes:mode)
 	
 	new e_Protection:iImmunity, String:flags[32]; // living players are immune
 	
-	if (mode == scramble)
+
+	iImmunity = e_Protection:GetConVarInt(cvar_ScrambleImmuneMode); // living plyers are not immune from scramble
+	if (iImmunity != admin || iImmunity != uberAndBuildings)
 	{
-		iImmunity = e_Protection:GetConVarInt(cvar_ScrambleImmuneMode); // living plyers are not immune from scramble
-		if (iImmunity == none)
-		{
-			return true;
-		}
-		GetConVarString(cvar_ScrambleAdmFlags, flags, sizeof(flags));
+		return true;
 	}
+	GetConVarString(cvar_ScrambleAdmFlags, flags, sizeof(flags));	
 	/*
 		override immunities when things like alive or buildings don't matter
 		if the round started within 10 seconds, override immunity too
