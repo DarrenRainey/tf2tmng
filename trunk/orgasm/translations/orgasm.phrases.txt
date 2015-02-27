@@ -129,4 +129,8 @@
 		"en"		"You Crazed Killer! You got {1} kills in a row!"
 		"pl"		"Jesteś Maniakalnym Zabójcą! Zdobyłeś serię {1}-zabójstw pod rząd!"
 	}
+	"AreYouSure"
+	{
+		"en"		"Are you sure you want to reset the database? Run sm_orgasm_reset again in 30 seconds to confirm"
+	}
 }

@@ -51,6 +51,7 @@ enum a_state
 	normalRound,
 	bonusRound,
 };
+new Handle:g_hResetTimer[MAXPLAYERS+1] = {INVALID_HANDLE, ...};
 
 static const iSoundIndexes[] = {6,9,3,8,2,7,4,1,5};
 new Handle:g_hDb = INVALID_HANDLE;			/** Database connection */
@@ -205,9 +206,41 @@ public ConVarChange(Handle:convar, const String:oldValue[], const String:newValu
 
 public Action:cmd_Reset(client, args)
 {
-	ResetDatabase();
-	ReplyToCommand(client, "[SM] %t", "DatabaseReset");
+	if (g_hResetTimer[client] != INVALID_HANDLE)
+	{
+		CloseTimer(client);
+		ResetDatabase();
+		ReplyToCommand(client, "[SM] %t", "DatabaseReset");
+		LogAction(client, -1, "%N reset the database", client);
+		return Plugin_Handled;
+	}
+	ReplyToCommand(client, "[SM] %t", "AreYouSure");
+	new id;
+	if (client)
+	{
+		id = GetClientUserId(client);
+	}
+	g_hResetTimer[client] = CreateTimer(30.0, timer_Confirm, id);
 	return Plugin_Handled;
+}
+
+public Action:timer_Confirm(Handle:timer, any:id)
+{
+	new client;
+	if (id)
+	{
+		client = GetClientOfUserId(id);
+	}
+	g_hResetTimer[client] = INVALID_HANDLE;
+}
+
+CloseTimer(client)
+{
+	if (g_hResetTimer[client] != INVALID_HANDLE)
+	{
+		KillTimer(g_hResetTimer[client]);
+		g_hResetTimer[client] = INVALID_HANDLE;
+	}
 }
 
 public Action:cmd_say(client, args)
