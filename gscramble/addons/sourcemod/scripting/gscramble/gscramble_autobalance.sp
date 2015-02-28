@@ -331,17 +331,16 @@ stock BalanceTeams(bool:respawn=true)
 		{
 			if (GetConVarBool(cvar_Preference) && g_aPlayers[i][iTeamPreference] == smallTeam && !TF2_IsClientUbered(i))
 			{
-				iFatTeam[counter][1] = 3;
+				iFatTeam[counter][1] = 100;
 			}
-			else if (IsClientValidBalanceTarget(i))
-			{
-				iFatTeam[counter][1] = GetPlayerPriority(i);
-			}
-			else
-			{
-				iFatTeam[counter][1] = -5;
-			}
-			
+			//else if (IsClientValidBalanceTarget(i))
+			//{
+			iFatTeam[counter][1] = GetPlayerPriority(i);
+			//}
+			//else
+			//{
+				//iFatTeam[counter][1] = -5;
+			//}
 			iFatTeam[counter][0] = i;
 			counter++;
 		}
@@ -678,6 +677,15 @@ stock GetPlayerPriority(client)
 	if (!IsPlayerAlive(client))
 	{
 		iPriority += 5;
+	}
+	
+	char sFlags[32];
+	GetConVarString(cvar_BalanceAdmFlags, sFlags, sizeof(sFlags));
+	if (IsAdmin(client, sFlags))
+		iPriority -=20;
+	if (g_aPlayers[client][iBalanceTime] > GetTime())
+	{
+		iPriority -=20;
 	}
 	/*
 	if (GetConVarBool(cvar_BalanceDuelImmunity) && TF2_IsPlayerInDuel(client))
