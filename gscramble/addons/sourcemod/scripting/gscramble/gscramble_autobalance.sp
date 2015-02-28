@@ -329,13 +329,15 @@ stock BalanceTeams(bool:respawn=true)
 		}
 		else if (GetClientTeam(i) == team) 
 		{
+			// player wants to be on the other team, give him preference 
 			if (GetConVarBool(cvar_Preference) && g_aPlayers[i][iTeamPreference] == smallTeam && !TF2_IsClientUbered(i))
 			{
 				iFatTeam[counter][1] = 100;
 			}
+			else
+				iFatTeam[counter][1] = GetPlayerPriority(i);
 			//else if (IsClientValidBalanceTarget(i))
 			//{
-			iFatTeam[counter][1] = GetPlayerPriority(i);
 			//}
 			//else
 			//{
