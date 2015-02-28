@@ -30,11 +30,11 @@ public OnPluginStart()
 	cvar_ReactiveChance = CreateConVar("sentryfun_reactivate_chance", "1.00", "% chance that a sentry will reactivate if its been disabled.", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	CreateConVar("sentryfun_version", VERSION, "Plugin Version", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
 	HookConVarChange(cvar_Enabled, EnabledChange);
+	AutoExecConfig(true, "plugin.sentryfun");
 }
 
 public OnConfigsExecuted()
 {
-	AutoExecConfig(true, "plugin.sentryfun");
 	if (GetConVarBool(cvar_Enabled))
 	{
 		if (!g_bHooked)

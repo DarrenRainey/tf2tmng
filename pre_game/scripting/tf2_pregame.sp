@@ -43,8 +43,8 @@ $Copyright: (c) Tf2Tmng 2009-2011$
 #define FULL_CRIT 1
 #define NO_CRIT 2
 
-new g_iCrits;
-new g_iMelee;
+//new g_Crits;
+//new g_iMelee;
 new bool:g_bPreGame;
 new bool:g_bBlockLog;
 
@@ -55,18 +55,48 @@ new g_iFrags[MAXPLAYERS+1];
 new Handle:g_hVarTime = INVALID_HANDLE;
 new Handle:g_hVarStats = INVALID_HANDLE;
 new Handle:g_hCookie_ClientMenu = INVALID_HANDLE;
+new Handle:g_hVarDoors = INVALID_HANDLE,
+	Handle:g_hVarCrits = INVALID_HANDLE,
+	Handle:g_hVarMelee = INVALID_HANDLE;
 new g_iTimeLeft;
 
 new g_iMenuSettings[MAXPLAYERS+1];
 
+/*
 enum e_RoundState
 {
 	newMap,
 	preGame,
 	normal,
 	lateLoad
+};*/
+
+enum e_Door
+{
+	dontTouch,
+	open,
+	close,
+	randomDoor
 };
-new e_RoundState:g_RoundState;
+
+enum e_Crits
+{
+	noCrit,
+	miniCrit,
+	fullCrit,
+	randomCrit
+};
+
+enum e_Melee
+{
+	allowAll,
+	meleeOnly,
+	randomMelee
+};
+
+//new e_RoundState:g_RoundState;
+new e_Crits:g_Crits;
+bool g_bMelee;
 
 public Plugin:myinfo = 
 {
@@ -77,6 +107,7 @@ public Plugin:myinfo =
 	url = "http://tf2tmng.googlecode.com/"
 };
 
+/*
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
 	if (late)
@@ -84,7 +115,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 		g_RoundState = lateLoad;
 	}
 	return APLRes_Success;
-}
+}*/
 
 public OnClientConnected(client)
 {
@@ -93,13 +124,17 @@ public OnClientConnected(client)
 
 public OnPluginStart()
 {
-	HookEvent("teamplay_round_start", 		Event_RoundStart, EventHookMode_PostNoCopy);
+	//HookEvent("teamplay_round_start", 		Event_RoundStart, EventHookMode_PostNoCopy);
 	HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode_Post);
 	HookEvent("player_death", Event_PlayerDeathPre, EventHookMode_Pre);
 	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
 	AddGameLogHook(LogHook);
 	g_hVarTime = CreateConVar("tf2_pregame_timelimit", "50", "time in seconds that pregame lasts", FCVAR_PLUGIN, true, 10.0, false);
 	g_hVarStats = CreateConVar("tf2_pregame_stats", "1", "Track the number of kills people get during", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_hVarDoors = CreateConVar("tf2_pregame_doors", "3", "1 = open all map doors.\n2 = close and lock all map doors.\n3 = random.\n0=Do not mess with doors",
+								FCVAR_PLUGIN, true, 0.0, true, 2.0);
+	g_hVarCrits = CreateConVar("tf2_pregame_crits", "3", "0 = no crits.\n1 = Mini Crits\n2 = Full crits.\n3 = random.", FCVAR_PLUGIN, true, 0.0, true, 3.0);
+	g_hVarMelee	= CreateConVar("tf2_pregame_melee", "2", "0 = allow all weapons.\n1 = Melee only.\n2 = random", FCVAR_PLUGIN, true, 0.0, true, 2.0);
 	CreateConVar("sm_pregame_slaughter_version", PL_VERSION, "Version", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
 	
 	g_hCookie_ClientMenu = RegClientCookie("tf2_pregame_menu", "enables the winners menu on a per-client basis", CookieAccess_Public);
@@ -263,6 +298,7 @@ public Action:Timer_Spawn(Handle:timer, any:userid)
 	return Plugin_Handled;
 }
 
+/*
 public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	switch (g_RoundState)
@@ -285,7 +321,7 @@ public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 		StartPreGame();
 	}
 	else StopPreGame();
-}
+}*/
 
 public Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -302,8 +338,7 @@ public Action:Timer_Cond(Handle:timer, any:userid)
 	{
 		if (g_bPreGame)
 		{
-
-			if (g_iMelee)
+			if (g_bMelee)
 			{
 				RemoveWeapons(client);
 			}
@@ -322,18 +357,15 @@ public Action:Timer_SetCond(Handle:timer, any:id)
 	new client = GetClientOfUserId(id);
 	if (g_bPreGame && client && IsPlayerAlive(client))
 	{
-		TF2_AddCondition(client, TFCond:20, GetConVarFloat(g_hVarTime));
-		switch (g_iCrits)
+		TF2_AddCondition(client, TFCond_InHealRadius, GetConVarFloat(g_hVarTime));
+		if (g_Crits == noCrit)
+			return Plugin_Handled;
+		if (g_Crits == fullCrit)
 		{
-			case MINI_CRIT:
-			{
-				TF2_AddCondition(client, TFCond_Buffed, GetConVarFloat(g_hVarTime));
-			}
-			case FULL_CRIT:
-			{
-				TF2_AddCondition(client, TFCond_Kritzkrieged, GetConVarFloat(g_hVarTime));
-			}
+			TF2_AddCondition(client, TFCond_Kritzkrieged, GetConVarFloat(g_hVarTime));
 		}
+		else
+			TF2_AddCondition(client, TFCond_Buffed, GetConVarFloat(g_hVarTime));
 	}
 	return Plugin_Handled;
 }
@@ -380,14 +412,157 @@ stock RemoveWeapons(client)
 stock StartPreGame()
 {
 	g_bPreGame = true;
-	g_iCrits = GetRandomInt(0,2);
-	g_iMelee = GetRandomInt(0,1);
 	SetConVarBool(FindConVar("mp_friendlyfire"), true);
 	SetConVarBool(FindConVar("tf_avoidteammates"), false);
 	ModifyLockers("disable");
 	RespawnAll();
 	g_iTimeLeft = GetConVarInt(g_hVarTime);
 	CreateTimer(1.0, Timer_CountDown, _, TIMER_REPEAT);
+	
+	char lock[32];
+	char openClose[32];
+	bool bLock;
+	SetGlobalCrits();
+	SetGlobalMelee();
+	switch (e_Door:GetConVarInt(g_hVarDoors))
+	{
+		case dontTouch:
+		{
+			return;
+		}
+		case open:
+		{
+			bLock = false;
+			//Format(lock, sizeof(lock), "unlock");
+			//Format(openClose, sizeof(openClose), "open");
+		}
+		case close:
+		{
+			bLock = true;
+			//Format(lock, sizeof(lock), "lock");
+			//Format(openClose, sizeof(openClose), "close");
+		}
+		case randomDoor:
+		{
+			switch (GetRandomInt(1,3))
+			{
+				case 1:
+				{
+					bLock = false;
+				}
+				case 2:
+				{
+					bLock = true;
+				}
+				case 3:
+				{
+					return;
+				}
+			}
+		}
+	}
+	if (bLock)
+	{
+		Format(lock, sizeof(lock), "lock");
+		Format(openClose, sizeof(openClose), "close");
+	}
+	else
+	{
+		Format(lock, sizeof(lock), "unlock");
+		Format(openClose, sizeof(openClose), "open");
+	}
+	ModifyDoors(lock, openClose);
+}
+
+SetGlobalMelee()
+{
+	switch (e_Melee:GetConVarInt(g_hVarMelee))
+	{
+		case meleeOnly:
+		{
+			g_bMelee = true;
+		}
+		case randomMelee:
+		{
+			if (GetRandomInt(0,1))
+			{
+				g_bMelee = true;
+			}
+			else
+				g_bMelee = false;
+		}
+		case allowAll:
+		{
+			g_bMelee = false;
+		}
+	}
+}
+
+SetGlobalCrits()
+{
+	switch (e_Crits:GetConVarInt(g_hVarCrits))
+	{
+		case miniCrit:
+		{
+			g_Crits = miniCrit;
+			//TF2_AddCondition(client, TFCond_Buffed, GetConVarFloat(g_hVarTime));
+		}
+		case fullCrit:
+		{
+			g_Crits = fullCrit;
+			//TF2_AddCondition(client, TFCond_Kritzkrieged, GetConVarFloat(g_hVarTime));
+		}
+		case noCrit:
+		{
+			g_Crits = noCrit;
+		}
+		case randomCrit:
+		{
+			switch (GetRandomInt(1,3))
+			{
+				case 1:
+				{
+					g_Crits = miniCrit;
+				}
+				case 2:
+				{
+					g_Crits = fullCrit;
+				}
+				case 3:
+				{
+					g_Crits = noCrit;
+				}
+			}
+		}
+	}
+}
+
+ModifyDoors(const char[] lock, const char[] openOrClose)
+{
+	new ent = MAXPLAYERS+1;
+	while((ent = FindEntityByClassname(ent, "func_door"))!=-1) 
+	{
+		if (IsValidEdict(ent))
+		{
+			AcceptEntityInput(ent, lock, -1);
+			AcceptEntityInput(ent, openOrClose, -1);
+		}
+	}
+	
+	ent = MAXPLAYERS+1;
+	while((ent = FindEntityByClassname(ent, "prop_dynamic"))!=-1) 
+	{
+		if (IsValidEdict(ent))
+		{
+			new String:tName[64];
+			GetEntPropString(ent, Prop_Data, "m_iName", tName, sizeof(tName));
+			if ((StrContains(tName,"door",false)!=-1) || (StrContains(tName,"gate",false)!=-1))
+			{
+				AcceptEntityInput(ent, lock, -1);
+				AcceptEntityInput(ent, openOrClose, -1);
+			}
+		}
+	}
 }
 
 public Action:Timer_CountDown(Handle:timer)
@@ -441,7 +616,7 @@ public Action:Timer_RemoveEffects(Handle:timer)
 		{
 			TF2_RemoveCondition(i, TFCond_Buffed);
 			TF2_RemoveCondition(i, TFCond_Kritzkrieged);
-			TF2_RemoveCondition(i, TFCond:20);
+			TF2_RemoveCondition(i, TFCond_InHealRadius);
 		}
 	}
 }
@@ -530,7 +705,7 @@ public OnMapStart()
 	StripNotify("mp_friendlyfire");
 	StripNotify("sv_tags");
 	StripNotify("tf_avoidteammates");
-	if (g_RoundState != lateLoad)
+	/*if (g_RoundState != lateLoad)
 	{
 		g_RoundState = newMap;
 	}
@@ -538,7 +713,17 @@ public OnMapStart()
 	{
 		g_RoundState = normal;
 	}
-	g_bPreGame = false;
+	g_bPreGame = false;*/
+}
+
+public TF2_OnWaitingForPlayersStart()
+{
+	StartPreGame();
+}
+
+public TF2_OnWaitingForPlayersEnd()
+{
+	StopPreGame();
 }
 
 stock StripNotify(const String:setting[])
