@@ -490,7 +490,7 @@ public Action:Timer_BalanceSpawn(Handle:timer, any:id)
 	return Plugin_Handled;
 }
 
-bool IsClientValidBalanceTarget(client)
+bool IsClientValidBalanceTarget(client, bool CalledFromPrio = false)
 {
 	if (IsClientInGame(client) && IsValidTeam(client))
 	{
@@ -585,7 +585,7 @@ bool IsClientValidBalanceTarget(client)
 			}
 		}
 
-		if (bAdmin)
+		if (!CalledFromPrio && bAdmin)
 		{
 			new String:flags[32],
 				bool:bSkip;
@@ -674,20 +674,24 @@ stock GetPlayerPriority(client)
 		return 0;
 	}
 	new iPriority;
-	if (!IsClientValidBalanceTarget(client))
-		iPriority -=25;
+	if (!IsClientValidBalanceTarget(client, false))
+		iPriority -=50;
 	if (!IsPlayerAlive(client))
 	{
 		iPriority += 5;
 	}
 	
-	char sFlags[32];
-	GetConVarString(cvar_BalanceAdmFlags, sFlags, sizeof(sFlags));
-	if (IsAdmin(client, sFlags))
-		iPriority -=20;
-	if (g_aPlayers[client][iBalanceTime] > GetTime())
+	
+	if (GetConVarInt(cvar_BalanceImmunity) == 1 || GetConVarInt(cvar_BalanceImmunity) == 3)
 	{
-		iPriority -=20;
+		char sFlags[32];
+		GetConVarString(cvar_BalanceAdmFlags, sFlags, sizeof(sFlags));
+		if (IsAdmin(client, sFlags))
+			iPriority -=100;
+		if (g_aPlayers[client][iBalanceTime] > GetTime())
+		{
+			iPriority -=20;
+		}
 	}
 	/*
 	if (GetConVarBool(cvar_BalanceDuelImmunity) && TF2_IsPlayerInDuel(client))
