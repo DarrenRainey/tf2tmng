@@ -688,10 +688,10 @@ stock GetPlayerPriority(client)
 		GetConVarString(cvar_BalanceAdmFlags, sFlags, sizeof(sFlags));
 		if (IsAdmin(client, sFlags))
 			iPriority -=100;
-		if (g_aPlayers[client][iBalanceTime] > GetTime())
-		{
-			iPriority -=20;
-		}
+	}
+	if (g_aPlayers[client][iBalanceTime] > GetTime())
+	{
+		iPriority -=20;
 	}
 	/*
 	if (GetConVarBool(cvar_BalanceDuelImmunity) && TF2_IsPlayerInDuel(client))
