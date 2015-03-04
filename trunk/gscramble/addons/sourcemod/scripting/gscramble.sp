@@ -131,7 +131,8 @@ new Handle:cvar_Version				= INVALID_HANDLE,
 	Handle:cvar_ScrambleCheckImmune		= INVALID_HANDLE,
 	Handle:cvar_BalanceImmunityCheck	= INVALID_HANDLE,
 	Handle:cvar_OneScramblePerRound 	= INVALID_HANDLE,
-	Handle:cvar_ProgressDisable			= INVALID_HANDLE;
+	Handle:cvar_ProgressDisable			= INVALID_HANDLE,
+	Handle:cvar_AutoTeamBalance			= INVALID_HANDLE;
 
 new Handle:g_hAdminMenu 			= INVALID_HANDLE,
 	Handle:g_hScrambleVoteMenu 		= INVALID_HANDLE,
@@ -422,6 +423,9 @@ public OnPluginStart()
 	HookConVarChange(cvar_Balancer, handler_ConVarChange);
 	HookConVarChange(cvar_NoSequentialScramble, handler_ConVarChange);
 	HookConVarChange(cvar_SortMode, handler_ConVarChange);
+	cvar_AutoTeamBalance = FindConVar("mp_autoteambalance");
+	if (cvar_AutoTeamBalance != INVALID_HANDLE)
+		HookConVarChange(cvar_AutoTeamBalance, handler_ConVarChange);
 	
 	AutoExecConfig(true, "plugin.gscramble");
 	LoadTranslations("common.phrases");
@@ -1102,6 +1106,19 @@ public handler_ConVarChange(Handle:convar, const String:oldValue[], const String
 	if (convar == cvar_NoSequentialScramble)
 	{
 		g_bNoSequentialScramble = iNewValue?true:false;
+	}
+	
+	if (convar == cvar_AutoTeamBalance)
+	{
+		if (g_bHooked && g_bAutoBalance)
+		{
+			if (StringToInt(newValue))
+			{
+				LogMessage("Something tried to enable the built in balancer with gs_autobalance still enabled.");
+				SetConVarBool(convar, false);
+				LogAction(0, -1, "Setting mp_autoteambalance back to 0");
+			}
+		}
 	}
 }
 
@@ -2670,7 +2687,7 @@ stock bool:IsValidSpectator(client)
 	return false;
 }
 			
-stock bool:IsAdmin(client, const String:flags[])
+bool IsAdmin(client, const char[] flags)
 {
 	new bits = GetUserFlagBits(client);	
 	
