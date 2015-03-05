@@ -500,6 +500,9 @@ bool IsClientValidBalanceTarget(client, bool CalledFromPrio = false)
 			{
 				return false;
 			}
+			#if defined DEBUG
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Is valid target for reason: bot, player: %N", client);
+			#endif
 			return true;
 		}
 
@@ -509,18 +512,26 @@ bool IsClientValidBalanceTarget(client, bool CalledFromPrio = false)
 			new big = GetLargerTeam(),
 				pref = g_aPlayers[client][iTeamPreference];
 			if (pref && pref != big)
+			{
+				#if defined DEBUG
+				LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Is valid target for reason: player preference, player: %N", client);
+				#endif
 				return true;
+			}
 		}
 		
 		if (g_aPlayers[client][iBalanceTime] > GetTime())
 		{
+			#if defined DEBUG
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Is INVALID target for reason: swapped recently, player: %N", client);
+			#endif
 			return false;
 		}
 		
 		if (GetConVarBool(cvar_TeamworkProtect) && g_aPlayers[client][iTeamworkTime] >= GetTime())
 		{
 			#if defined DEBUG
-			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Flagging immune: teamwork protection");
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Is INVALID target for reason: teamword protection, player: %N", client);
 			#endif
 			return false;
 		}
@@ -578,9 +589,9 @@ bool IsClientValidBalanceTarget(client, bool CalledFromPrio = false)
 		{
 			if (TF2_HasBuilding(client))
 			{
-				#if defined DEBUG
-				LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Detected building, flagging false");
-				#endif
+			#if defined DEBUG
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Is INVALID target for reason: engineer building, player: %N", client);
+			#endif
 				return false;
 			}
 		}
@@ -588,90 +599,119 @@ bool IsClientValidBalanceTarget(client, bool CalledFromPrio = false)
 		if (!CalledFromPrio && bAdmin)
 		{
 			new String:flags[32],
-				bool:bSkip;
+				bool:bSkip = false;
 			GetConVarString(cvar_BalanceAdmFlags, flags, sizeof(flags));
-			if (GetConVarFloat(cvar_BalanceImmunityCheck) > 0.0)
+			bSkip = CheckBalanceOverride();
+			if (!bSkip && IsAdmin(client, flags))
 			{
-				new	iTargets,
-					iImmune,
-					iTotal;
-				for (new i = 1; i <= MaxClients; i++)
-				{
-					if (IsClientInGame(i) && IsValidTeam(i))
-					{
-						if (IsAdmin(i, flags))
-						{
-							iImmune++;
-						}
-						else
-						{
-							iTargets++;
-						}
-					}
-				}
-				if (iImmune)
-				{
-					float fPercent;
-					iTotal = iImmune + iTargets;
-					fPercent = FloatDiv(float(iImmune), float(iTotal));
-					if (fPercent >= GetConVarFloat(cvar_BalanceImmunityCheck))
-					{
-						if (!g_bSilent && (GetTime() - g_iImmunityDisabledWarningTime) > 300)
-						{
-							PrintToChatAll("\x01\x04[SM]\x01 %t", "ImmunityDisabled", RoundFloat(fPercent));
-							g_iImmunityDisabledWarningTime = GetTime();
-						}
-						bSkip = true;
-					}
-				}
-				if (!bSkip && IsAdmin(client, flags))
-				{
-					#if defined DEBUG
-					LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Detected admin: flagging false");
-					#endif
-					return false;
-				}
-			}
-		}
-
-		if (g_bUseBuddySystem)
-		{
-			new buddy;
-			
-			if ((buddy = g_aPlayers[client][iBuddy]))
-			{
-				if (GetClientTeam(buddy) == GetClientTeam(client))
-				{
-					LogAction(-1, 0, "Flagging client %L invalid because of buddy preference", client);
-					return false;
-				}
-				else if (IsValidTeam(g_aPlayers[client][iBuddy]))
-				{
-					LogAction(-1, 0, "Flagging client %L valid because of buddy preference", client);
-					return true;
-				}
-			}		
-			if (IsClientBuddy(client))
-			{
+				#if defined DEBUG
+				LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Is INVALID target for reason: admin, player: %N", client);
+				#endif
 				return false;
 			}
 		}
+
+		switch (CheckBuddySystem(client))
+		{
+			case 1:
+				return false;
+			case 2:
+			{
+				#if defined DEBUG
+				LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Is valid target for reason: buddy system, player: %N", client);
+				#endif
+				return true;
+			}
+		}
+		
 		if (GetConVarBool(cvar_BalanceDuelImmunity) && TF2_IsPlayerInDuel(client))
 			return false;
+		#if defined DEBUG
+		LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Is valid target for reason: passed all checks, player: %N", client);
+		#endif
 		return true;
 	}
 	return false;
+}
+
+CheckBuddySystem(client)
+{
+	if (g_bUseBuddySystem)
+	{
+		new buddy;
+		
+		if ((buddy = g_aPlayers[client][iBuddy]))
+		{
+			if (GetClientTeam(buddy) == GetClientTeam(client))
+			{
+				LogAction(-1, 0, "Flagging client %L invalid because of buddy preference", client);
+				return 1;
+			}
+			else if (IsValidTeam(g_aPlayers[client][iBuddy]))
+			{
+				LogAction(-1, 0, "Flagging client %L valid because of buddy preference", client);
+				return 2;
+			}
+		}		
+		if (IsClientBuddy(client))
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
+bool CheckBalanceOverride()
+{
+	if (GetConVarFloat(cvar_BalanceImmunityCheck) > 0.0)
+	{
+		new	iTargets,
+			iImmune,
+			iTotal;
+		char flags[32];
+		GetConVarString(cvar_BalanceAdmFlags, flags, sizeof(flags));
+		for (new i = 1; i <= MaxClients; i++)
+		{
+			if (IsClientInGame(i) && IsValidTeam(i))
+			{
+				if (IsAdmin(i, flags))
+				{
+					iImmune++;
+				}
+				else
+				{
+					iTargets++;
+				}
+			}
+		}
+		if (iImmune)
+		{
+			float fPercent;
+			iTotal = iImmune + iTargets;
+			fPercent = FloatDiv(float(iImmune), float(iTotal));
+			if (fPercent >= GetConVarFloat(cvar_BalanceImmunityCheck))
+			{
+				if (!g_bSilent && (GetTime() - g_iImmunityDisabledWarningTime) > 300)
+				{
+					PrintToChatAll("\x01\x04[SM]\x01 %t", "ImmunityDisabled", RoundFloat(fPercent));
+					g_iImmunityDisabledWarningTime = GetTime();
+					return false;
+				}
+			}
+		}
+	}
+	return true;
 }
 
 /**
 * Prioritize people based on active buildings, ubercharge, living/dead, or connection time
 * used for the force-balance function
 */
-stock GetPlayerPriority(client)
+GetPlayerPriority(client)
 {
 	if (IsFakeClient(client))
 	{
-		return 0;
+		return 50;
 	}
 	new iPriority;
 	if (!IsClientValidBalanceTarget(client, false))
@@ -693,77 +733,19 @@ stock GetPlayerPriority(client)
 	{
 		iPriority -=20;
 	}
-	/*
-	if (GetConVarBool(cvar_BalanceDuelImmunity) && TF2_IsPlayerInDuel(client))
-	{
-		iPriority -=10;
-	}
-	
-	if (g_bUseBuddySystem)
-	{
-		if (g_aPlayers[client][iBuddy])
-		{
-			if (GetClientTeam(client) == GetClientTeam(g_aPlayers[client][iBuddy]))
-			{
-				iPriority -=10;
-			}
-			else if (IsValidTeam(g_aPlayers[client][iBuddy]))
-			{
-				iPriority += 20;
-			}
-		}
-		
-		if (IsClientBuddy(client))
-		{
-			iPriority -=10;
-		}
-	}
-	
-	
-	if (IsClientInGame(client) && IsValidTeam(client))
-	{
-		new String:sFlags[32];
-		GetConVarString(cvar_BalanceAdmFlags, sFlags, sizeof(sFlags));
-		if (IsAdmin(client, sFlags))
-			iPriority -=20;
-		if (g_aPlayers[client][iBalanceTime] > GetTime())
-		{
-			iPriority -=20;
-		}
-		
-		if (g_aPlayers[client][iTeamworkTime] >= GetTime())
-		{
-			iPriority -= 20;
-		}
-		
-		if (g_RoundState != bonusRound)
-		{
-			if (TF2_HasBuilding(client)||DoesClientHaveIntel(client)||TF2_IsClientUberCharged(client)||TF2_IsClientUbered(client)|| !IsNotTopPlayer(client, GetClientTeam(client))||TF2_IsClientOnlyMedic(client))
-			{
-				iPriority -=20;
-			}
-			
-			if (!IsPlayerAlive(client))
-			{
-				iPriority += 5;
-			}
-			else
-			{
-				if (g_aPlayers[client][bHasFlag])
-				{
-					iPriority -= 20;
-				}
-				
-				iPriority += 1;
-			}
-		}		
-		
-		make new clients more likely to get swapped
-		*/
 	if (GetClientTime(client) < 180)
 	{
 		iPriority += 5;	
 	}
+	
+	switch (CheckBuddySystem(client))
+	{
+		case 1:
+			iPriority -=20;
+		case 2:
+			iPriority +=100;
+	}
+	
 	return iPriority;
 }
 
