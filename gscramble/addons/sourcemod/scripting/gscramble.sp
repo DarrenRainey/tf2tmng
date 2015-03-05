@@ -29,7 +29,7 @@ along with this plugin.  If not, see <http://www.gnu.org/licenses/>.
 #include <sdktools>
 
 // comment out to disable debug
-//#define DEBUG
+#define DEBUG
 
 #undef REQUIRE_EXTENSIONS
 #include <clientprefs>
@@ -2468,6 +2468,9 @@ public Action:Event_PlayerDeath_Pre(Handle:event, const String:name[], bool:dont
 	
 	if (g_bAutoBalance && IsOkToBalance() && g_aTeams[bImbalanced] && GetClientTeam(v_client) == GetLargerTeam())	
 	{
+		#if defined DEBUG
+		LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Checking balance for player: %N", v_client);
+		#endif
 		CreateTimer(0.1, timer_StartBalanceCheck, v_client, TIMER_FLAG_NO_MAPCHANGE);
 	}
 		
