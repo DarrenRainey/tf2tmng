@@ -531,7 +531,7 @@ bool IsClientValidBalanceTarget(client, bool CalledFromPrio = false)
 		if (GetConVarBool(cvar_TeamworkProtect) && g_aPlayers[client][iTeamworkTime] >= GetTime())
 		{
 			#if defined DEBUG
-			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Is INVALID target for reason: teamword protection, player: %N", client);
+			LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Is INVALID target for reason: teamwork protection, player: %N", client);
 			#endif
 			return false;
 		}
@@ -598,10 +598,11 @@ bool IsClientValidBalanceTarget(client, bool CalledFromPrio = false)
 
 		if (!CalledFromPrio && bAdmin)
 		{
-			new String:flags[32],
-				bool:bSkip = false;
+			char flags[32];
+			new bool:bSkip = false;
+			
 			GetConVarString(cvar_BalanceAdmFlags, flags, sizeof(flags));
-			bSkip = CheckBalanceOverride();
+			bSkip = CheckBalanceOverride();	
 			if (!bSkip && IsAdmin(client, flags))
 			{
 				#if defined DEBUG
@@ -695,12 +696,12 @@ bool CheckBalanceOverride()
 				{
 					PrintToChatAll("\x01\x04[SM]\x01 %t", "ImmunityDisabled", RoundFloat(fPercent));
 					g_iImmunityDisabledWarningTime = GetTime();
-					return false;
+					return true;
 				}
 			}
 		}
 	}
-	return true;
+	return false;
 }
 
 /**
