@@ -343,30 +343,30 @@ public OnPluginStart()
 	CheckTranslation();
 	cvar_Enabled			= CreateConVar("gs_enabled", 		"1",		"Enable/disable the plugin and all its hooks.", FCVAR_PLUGIN|FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
-	cvar_Balancer			=	CreateConVar("gs_autobalance",	"0",	"Enable/disable the autobalance feature of this plugin.\nUse only if you have the built-in balancer disabled.", FCVAR_PLUGIN, true, 0.0, true, 1.0);	
-	cvar_TopProtect			= CreateConVar("gs_ab_protect", "5",	"How many of the top players to protect on each team from autobalance.", FCVAR_PLUGIN, true, 0.0, false);
+	cvar_Balancer			=	CreateConVar("gs_autobalance",	"0",	"Enable/disable the auto-balance feature of this plugin.\nUse only if you have the built-in balancer disabled.", FCVAR_PLUGIN, true, 0.0, true, 1.0);	
+	cvar_TopProtect			= CreateConVar("gs_ab_protect", "5",	"How many of the top players to protect on each team from auto-balance.", FCVAR_PLUGIN, true, 0.0, false);
 	cvar_BalanceTime		= 	CreateConVar("gs_ab_balancetime",	"5",			"Time in minutes after a client is balanced in which they cannot be balanced again.", FCVAR_PLUGIN);
 	cvar_BalanceLimit		=	CreateConVar("gs_ab_unbalancelimit",	"2",	"If one team has this many more players than the other, then consider the teams imbalanced.", FCVAR_PLUGIN);
 	cvar_BalanceImmunity 	=	CreateConVar("gs_ab_immunity",			"2",	"Controls who is immune from auto-balance\n0 = no immunity\n1 = admins\n2 = engies with buildings\n3 = both admins and engies with buildings", FCVAR_PLUGIN, true, 0.0, true, 3.0);
 	cvar_MaxUnbalanceTime	= CreateConVar("gs_ab_max_unbalancetime", "120", "Max time the teams are allowed to be unbalanced before a balanced is forced on living players.\n0 = disabled.", FCVAR_PLUGIN, true, 0.0, false); 
-	cvar_Preference			= CreateConVar("gs_ab_preference",		"1",	"Allow clients to tell the plugin what team they prefer.  When an autobalance starts, if the client prefers the team, it overrides any immunity check.", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	cvar_Preference			= CreateConVar("gs_ab_preference",		"1",	"Allow clients to tell the plugin what team they prefer.  When an auto-balance starts, if the client prefers the team, it overrides any immunity check.", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BalanceActionDelay = CreateConVar("gs_ab_actiondelay",		"5", 	"Time, in seconds after an imbalance is detected in which an imbalance is flagged, and possible swapping can occur", FCVAR_PLUGIN, true, 0.0, false);
 	cvar_ForceBalanceTrigger = CreateConVar("gs_ab_forcetrigger",	"4",	"If teams become imbalanced by this many players, auto-force a balance", FCVAR_PLUGIN, true, 0.0, false);
-	cvar_BalanceTimeLimit	= 	CreateConVar("gs_ab_timelimit", "0", 		"If there are this many seconds, or less, remaining in a round, stop auto-balacing", FCVAR_PLUGIN, true, 0.0, false);
+	cvar_BalanceTimeLimit	= 	CreateConVar("gs_ab_timelimit", "0", 		"If there are this many seconds, or less, remaining in a round, stop auto-balancing", FCVAR_PLUGIN, true, 0.0, false);
 	cvar_AbHumanOnly 		= CreateConVar("gs_ab_humanonly", "0", "Only auto-balance human players", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_ProgressDisable	=	CreateConVar("gs_ab_cartprogress_disable", ".90", "If the cart has reached this percentage of progress, then disable auto-balance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BalanceDuelImmunity = CreateConVar("gs_ab_duel_immunity", "1", "Players in duels are immune from auto-balance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_ProtectOnlyMedic	=	CreateConVar("gs_ab_protect_medic", "1", "A team's only medic will be immune from balancing", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BalanceChargeLevel = CreateConVar("gs_ab_protectmedic_chargelevel", "0.5", "Charge level to protect medics from auto balance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	cvar_BalanceImmunityCheck = CreateConVar("gs_balance_checkummunity_percent", "0.0", "Percentage of players immune from auto balance to stat to ignore balance immunity check", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	cvar_BalanceImmunityCheck = CreateConVar("gs_balance_checkummunity_percent", "0.0", "Percentage of players immune from auto balance to start to ignore balance immunity check", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
-	cvar_TeamWorkFlagEvent 		= CreateConVar("gs_ab_teamwork_flagevent", 		"30", "Time immunitty from auto-balance to grant when a player touches/drops the ctf flag.", 	FCVAR_PLUGIN, true, 0.0, false);
-	cvar_TeamWorkUber			= CreateConVar("gs_ab_teamwork_uber_deploy", 	"30", "Time immunitty from auto-balance to grant when a player becomes uberer charged.", 		FCVAR_PLUGIN, true, 0.0, false);
-	cvar_TeamWorkMedicKill		= CreateConVar("gs_ab_teamwork_kill_medic", 	"30", "Time immunitty from auto-balance to grant when a player kills a charged medic.", 		FCVAR_PLUGIN, true, 0.0, false);
-	cvar_TeamWorkCpTouch		= CreateConVar("gs_ab_teamwork_cp_touch", 		"30", "Time immunitty from auto-balance to grant when a player touches a control point.", 		FCVAR_PLUGIN, true, 0.0, false);
-	cvar_TeamWorkCpCapture		= CreateConVar("gs_ab_teamwork_cp_capture", 	"30", "Time immunitty from auto-balance to grant when a player captures a control point.", 		FCVAR_PLUGIN, true, 0.0, false);
-	cvar_TeamWorkPlaceSapper	= CreateConVar("gs_ab_teamwork_sapper_place", 	"30", "Time immunitty from auto-balance to grant when a spy places a sapper.", 					FCVAR_PLUGIN, true, 0.0, false);
-	cvar_TeamWorkBuildingKill	= CreateConVar("gs_ab_teamwork_building_kill", 	"30", "Time immunitty from auto-balance to grant when a player destroys a building.", 			FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkFlagEvent 		= CreateConVar("gs_ab_teamwork_flagevent", 		"30", "Time immunity from auto-balance to grant when a player touches/drops the ctf flag.", 	FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkUber			= CreateConVar("gs_ab_teamwork_uber_deploy", 	"30", "Time immunity from auto-balance to grant when a player becomes uberer charged.", 		FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkMedicKill		= CreateConVar("gs_ab_teamwork_kill_medic", 	"30", "Time immunity from auto-balance to grant when a player kills a charged medic.", 		FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkCpTouch		= CreateConVar("gs_ab_teamwork_cp_touch", 		"30", "Time immunity from auto-balance to grant when a player touches a control point.", 		FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkCpCapture		= CreateConVar("gs_ab_teamwork_cp_capture", 	"30", "Time immunity from auto-balance to grant when a player captures a control point.", 		FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkPlaceSapper	= CreateConVar("gs_ab_teamwork_sapper_place", 	"30", "Time immunity from auto-balance to grant when a spy places a sapper.", 					FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkBuildingKill	= CreateConVar("gs_ab_teamwork_building_kill", 	"30", "Time immunity from auto-balance to grant when a player destroys a building.", 			FCVAR_PLUGIN, true, 0.0, false);
 
 	cvar_ImbalancePrevent	= CreateConVar("gs_prevent_spec_imbalance", "0", "If set, block changes to spectate that result in a team imbalance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BuddySystem		= CreateConVar("gs_use_buddy_system", "0", "Allow players to choose buddies to try to keep them on the same team", FCVAR_PLUGIN, true, 0.0, true, 1.0);
@@ -420,7 +420,7 @@ public OnPluginStart()
 	cvar_Koth				= CreateConVar("gs_as_koth_pointcheck",		"0",	"If enabled, trigger a scramble if a team never captures the point in koth mode.", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_ScrLockTeams		= CreateConVar("gs_as_lockteamsbefore", "1", "If enabled, lock the teams between the scramble check and the actual scramble", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_PrintScrambleStats = CreateConVar("gs_as_print_stats", "1", "If enabled, print the scramble stats", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	cvar_ScrambleDuelImmunity = CreateConVar("gs_as_dueling_immunity", "0", "If set it 1, grant immunity to dueling players during a scramble", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	cvar_ScrambleDuelImmunity = CreateConVar("gs_as_dueling_immunity", "0", "If set it 1, grant immunity to duelling players during a scramble", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_LockTeamsFullRound	= CreateConVar("gs_as_lockteamsafter", "0", "If enabled, block team changes after a scramble for the entire next round", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_ScrambleCheckImmune = CreateConVar("gs_scramble_checkummunity_percent", "0.0", "If this percentage or higher of the players are immune from scramble, ignore immunity", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
