@@ -602,7 +602,7 @@ bool IsClientValidBalanceTarget(client, bool CalledFromPrio = false)
 			new bool:bSkip = false;
 			
 			GetConVarString(cvar_BalanceAdmFlags, flags, sizeof(flags));
-			bSkip = CheckBalanceOverride();	
+			bSkip = SkipBalanceCheck();	
 			if (!bSkip && IsAdmin(client, flags))
 			{
 				#if defined DEBUG
@@ -615,7 +615,12 @@ bool IsClientValidBalanceTarget(client, bool CalledFromPrio = false)
 		switch (CheckBuddySystem(client))
 		{
 			case 1:
+			{
+				#if defined DEBUG
+				LogToFile("addons/sourcemod/logs/gscramble.debug.txt", "Is INVALID target for reason: buddy system, player: %N", client);
+				#endif
 				return false;
+			}
 			case 2:
 			{
 				#if defined DEBUG
@@ -662,7 +667,7 @@ CheckBuddySystem(client)
 	return 0;
 }
 
-bool CheckBalanceOverride()
+bool SkipBalanceCheck()
 {
 	if (GetConVarFloat(cvar_BalanceImmunityCheck) > 0.0)
 	{

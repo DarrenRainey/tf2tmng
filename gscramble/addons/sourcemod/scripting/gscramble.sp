@@ -51,7 +51,7 @@ comment these 2 lines if you want to compile without them.
 #endif
 #define REQUIRE_PLUGIN
 
-#define VERSION "3.0.30"
+#define VERSION "3.0.31"
 #define TEAM_RED 2
 #define TEAM_BLUE 3
 #define SCRAMBLE_SOUND  "vo/announcer_am_teamscramble03.wav"
@@ -132,7 +132,14 @@ new Handle:cvar_Version				= INVALID_HANDLE,
 	Handle:cvar_BalanceImmunityCheck	= INVALID_HANDLE,
 	Handle:cvar_OneScramblePerRound 	= INVALID_HANDLE,
 	Handle:cvar_ProgressDisable			= INVALID_HANDLE,
-	Handle:cvar_AutoTeamBalance			= INVALID_HANDLE;
+	Handle:cvar_AutoTeamBalance			= INVALID_HANDLE,
+	Handle:cvar_TeamWorkFlagEvent		= INVALID_HANDLE,
+	Handle:cvar_TeamWorkUber			= INVALID_HANDLE,
+	Handle:cvar_TeamWorkMedicKill		= INVALID_HANDLE,
+	Handle:cvar_TeamWorkCpTouch			= INVALID_HANDLE,
+	Handle:cvar_TeamWorkCpCapture		= INVALID_HANDLE,
+	Handle:cvar_TeamWorkPlaceSapper		= INVALID_HANDLE,
+	Handle:cvar_TeamWorkBuildingKill		= INVALID_HANDLE;
 
 new Handle:g_hAdminMenu 			= INVALID_HANDLE,
 	Handle:g_hScrambleVoteMenu 		= INVALID_HANDLE,
@@ -208,7 +215,6 @@ new	g_iPluginStartTime,
 	g_iRoundTrigger,
 	g_iForceTime,
 	g_iLastRoundWinningTeam,
-	g_iTeamworkProtection,
 	g_iNumAdmins;
 
 
@@ -296,6 +302,17 @@ enum e_ScrambleModes
 	randomSort
 };
 
+enum eTeamworkReasons
+{
+	flagEvent,
+	medicKill,
+	medicDeploy,
+	buildingKill,
+	placeSapper,
+	controlPointCaptured,
+	controlPointTouch
+};
+
 new e_RoundState:g_RoundState,
 	ScrambleTime:g_iDefMode,
 	g_aTeams[e_TeamInfo],
@@ -343,11 +360,19 @@ public OnPluginStart()
 	cvar_BalanceChargeLevel = CreateConVar("gs_ab_protectmedic_chargelevel", "0.5", "Charge level to protect medics from auto balance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BalanceImmunityCheck = CreateConVar("gs_balance_checkummunity_percent", "0.0", "Percentage of players immune from auto balance to stat to ignore balance immunity check", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
+	cvar_TeamWorkFlagEvent 		= CreateConVar("gs_ab_teamwork_flagevent", 		"30", "Time immunitty from auto-balance to grant when a player touches/drops the ctf flag.", 	FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkUber			= CreateConVar("gs_ab_teamwork_uber_deploy", 	"30", "Time immunitty from auto-balance to grant when a player becomes uberer charged.", 		FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkMedicKill		= CreateConVar("gs_ab_teamwork_kill_medic", 	"30", "Time immunitty from auto-balance to grant when a player kills a charged medic.", 		FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkCpTouch		= CreateConVar("gs_ab_teamwork_cp_touch", 		"30", "Time immunitty from auto-balance to grant when a player touches a control point.", 		FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkCpCapture		= CreateConVar("gs_ab_teamwork_cp_capture", 	"30", "Time immunitty from auto-balance to grant when a player captures a control point.", 		FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkPlaceSapper	= CreateConVar("gs_ab_teamwork_sapper_place", 	"30", "Time immunitty from auto-balance to grant when a spy places a sapper.", 					FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkBuildingKill	= CreateConVar("gs_ab_teamwork_building_kill", 	"30", "Time immunitty from auto-balance to grant when a player destroys a building.", 			FCVAR_PLUGIN, true, 0.0, false);
+
 	cvar_ImbalancePrevent	= CreateConVar("gs_prevent_spec_imbalance", "0", "If set, block changes to spectate that result in a team imbalance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BuddySystem		= CreateConVar("gs_use_buddy_system", "0", "Allow players to choose buddies to try to keep them on the same team", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_SelectSpectators = CreateConVar("gs_Select_spectators", "60", "During a scramble or force-balance, select spectators who have change to spectator in less time in seconds than this setting, 0 disables", FCVAR_PLUGIN, true, 0.0, false);
 
-	cvar_TeamworkProtect	= CreateConVar("gs_teamwork_protect", "60",		"Time in seconds to protect a client from autobalance if they have recently captured a point, defended/touched intelligence, or assisted in or destroying an enemy sentry. 0 = disabled", FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamworkProtect	= CreateConVar("gs_teamwork_protect", "1",		"Enable/disable the teamwork protection feature.", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_ForceBalance 		= CreateConVar("gs_force_balance",	"0", 		"Force a balance between each round. (If you use a custom team balance plugin that doesn't do this already, or you have the default one disabled)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_TeamSwapBlockImmunity = CreateConVar("gs_teamswitch_immune",	"1",	"Sets if admins (root and ban) are immune from team swap blocking", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_ScrambleImmuneMode = CreateConVar("gs_scramble_immune", "0",		"Sets if admins and people with uber and engie buildings are immune from being scrambled.\n0 = no immunity\n1 = just admins\n2 = charged medics + engineers with buildings\n3 = admins + charged medics and engineers with buildings.", FCVAR_PLUGIN, true, 0.0, true, 3.0);
@@ -873,7 +898,6 @@ public OnConfigsExecuted()
 	g_bFullRoundOnly = GetConVarBool(cvar_FullRoundOnly);
 	g_bForceTeam = GetConVarBool(cvar_ForceTeam);
 	g_iForceTime = GetConVarInt(cvar_ForceTeam);
-	g_iTeamworkProtection = GetConVarInt(cvar_TeamworkProtect);
 	g_bAutoScramble = GetConVarBool(cvar_AutoScramble);
 	GetConVarInt(cvar_MenuVoteEnd) ? (g_iDefMode = Scramble_Now) : (g_iDefMode = Scramble_Round);
 	g_bNoSequentialScramble = GetConVarBool(cvar_NoSequentialScramble);
@@ -1088,10 +1112,6 @@ public handler_ConVarChange(Handle:convar, const String:oldValue[], const String
 		iNewValue == 1 ? (g_bForceReconnect = true) : (g_bForceReconnect = false);
 	}
 	
-	if (convar == cvar_TeamworkProtect)
-	{
-		g_iTeamworkProtection = iNewValue;
-	}
 	
 	if (convar == cvar_AutoScramble)
 	{
@@ -1240,9 +1260,9 @@ add protection to those killing fully charged medics
 */
 public hook_MedicDeath(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (g_iTeamworkProtection && g_RoundState == normal && GetEventBool(event, "charged"))
+	if (g_RoundState == normal && GetEventBool(event, "charged"))
 	{
-		AddTeamworkTime(GetClientOfUserId(GetEventInt(event, "userid")));
+		AddTeamworkTime(GetClientOfUserId(GetEventInt(event, "userid")), medicKill);
 	}
 }
 
@@ -1253,9 +1273,9 @@ public hookPreRound(Handle:event, const String:name[], bool:dontBroadcast)
 
 public hook_EndTouch(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (g_iTeamworkProtection && g_RoundState == normal)
+	if (g_RoundState == normal)
 	{
-		AddTeamworkTime(GetEventInt(event, "player"));
+		AddTeamworkTime(GetEventInt(event, "player"), controlPointTouch);
 	}
 }
 	
@@ -1264,9 +1284,9 @@ add protection to those sapping buildings
 */
 public hook_Sapper(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (g_iTeamworkProtection && g_RoundState == normal)
+	if (g_RoundState == normal)
 	{
-		AddTeamworkTime(GetClientOfUserId(GetEventInt(event, "userid")));
+		AddTeamworkTime(GetClientOfUserId(GetEventInt(event, "userid")), placeSapper);
 	}
 }
 
@@ -1275,12 +1295,12 @@ add protection to those deploying uber
 */	
 public hook_UberDeploy(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (g_iTeamworkProtection && g_RoundState == normal)
+	if (g_RoundState == normal)
 	{
 		new medic = GetClientOfUserId(GetEventInt(event, "userid")), target = GetClientOfUserId(GetEventInt(event, "targetid"));
 		
-		AddTeamworkTime(medic);
-		AddTeamworkTime(target);
+		AddTeamworkTime(medic, medicDeploy);
+		AddTeamworkTime(target, medicDeploy);
 	}
 }
 
@@ -1289,12 +1309,12 @@ public hook_ObjectDestroyed(Handle:event, const String:name[], bool:dontBroadcas
 	/**
 	adds teamwork protection if clients destroy a sentry
 	*/
-	if (g_iTeamworkProtection && g_RoundState == normal && GetEventInt(event, "objecttype") == 3)
+	if (g_RoundState == normal && GetEventInt(event, "objecttype") == 3)
 	{
 		new client = GetClientOfUserId(GetEventInt(event, "attacker")), assister = GetClientOfUserId(GetEventInt(event, "assister"));
 		
-		AddTeamworkTime(client);
-		AddTeamworkTime(assister);	
+		AddTeamworkTime(client, buildingKill);
+		AddTeamworkTime(assister, buildingKill);	
 	}
 }
 
@@ -1307,7 +1327,7 @@ public hook_PointCaptured(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	if (GetConVarBool(cvar_BalanceTimeLimit))
 		GetRoundTimerInformation(true);
-	if (g_iTeamworkProtection)
+	if (GetConVarBool(cvar_TeamworkProtect))
 	{
 		decl String:cappers[128];
 		GetEventString(event, "cappers", cappers, sizeof(cappers));
@@ -1315,7 +1335,7 @@ public hook_PointCaptured(Handle:event, const String:name[], bool:dontBroadcast)
 		new len = strlen(cappers);
 		for (new i = 0; i < len; i++)
 		{
-			AddTeamworkTime(cappers[i]);
+			AddTeamworkTime(cappers[i], controlPointCaptured);
 		}
 	}
 	
@@ -1355,7 +1375,7 @@ public hook_FlagEvent(Handle:event, const String:name[], bool:dontBroadcast)
 		}
 	}	
 	
-	AddTeamworkTime(GetEventInt(event, "player"));
+	AddTeamworkTime(GetEventInt(event, "player"), flagEvent);
 }
 
 /*public Action:hook_EscortProgress(Handle:event, const String:name[], bool:dontBroadcast)
@@ -1695,11 +1715,31 @@ public OnMapStart()
 	g_iLastRoundWinningTeam = 0;
 }
 
-AddTeamworkTime(client)
+AddTeamworkTime(client, eTeamworkReasons:reason)
 {
+	if (!GetConVarBool(cvar_TeamworkProtect))
+		return;
 	if (g_RoundState == normal && client && IsClientInGame(client) && !IsFakeClient(client))
 	{
-		g_aPlayers[client][iTeamworkTime] = GetTime()+g_iTeamworkProtection;
+		new iTime;
+		switch (reason)
+		{
+			case flagEvent:
+				iTime = GetConVarInt(cvar_TeamWorkFlagEvent);
+			case medicKill:
+				iTime = GetConVarInt(cvar_TeamWorkMedicKill);
+			case medicDeploy:
+				iTime = GetConVarInt(cvar_TeamWorkUber);
+			case buildingKill:
+				iTime = GetConVarInt(cvar_TeamWorkBuildingKill);
+			case placeSapper:
+				iTime = GetConVarInt(cvar_TeamWorkPlaceSapper);
+			case controlPointCaptured:
+				iTime = GetConVarInt(cvar_TeamWorkCpCapture);
+			case controlPointTouch:
+				iTime = GetConVarInt(cvar_TeamWorkCpTouch);
+		}
+		g_aPlayers[client][iTeamworkTime] = GetTime()+iTime;
 	}
 }
 
@@ -2556,7 +2596,7 @@ bool:IsClientBuddy(client)
 	return false;
 }
 
-bool:IsValidTarget(client)
+bool IsValidTarget(client)
 {
 	if (GetConVarBool(cvar_ScrambleDuelImmunity))
 	{
@@ -2566,11 +2606,11 @@ bool:IsValidTarget(client)
 		}
 	}
 	
-	new e_Protection:iImmunity, String:flags[32]; // living players are immune
-	
+	new e_Protection:iImmunity; 
+	char flags[32]; 
 
-	iImmunity = e_Protection:GetConVarInt(cvar_ScrambleImmuneMode); // living plyers are not immune from scramble
-	if (iImmunity != admin || iImmunity != uberAndBuildings)
+	iImmunity = e_Protection:GetConVarInt(cvar_ScrambleImmuneMode);
+	if (iImmunity == none)
 	{
 		return true;
 	}
