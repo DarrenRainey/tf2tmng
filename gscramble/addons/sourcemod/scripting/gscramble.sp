@@ -139,7 +139,9 @@ new Handle:cvar_Version				= INVALID_HANDLE,
 	Handle:cvar_TeamWorkCpTouch			= INVALID_HANDLE,
 	Handle:cvar_TeamWorkCpCapture		= INVALID_HANDLE,
 	Handle:cvar_TeamWorkPlaceSapper		= INVALID_HANDLE,
-	Handle:cvar_TeamWorkBuildingKill		= INVALID_HANDLE;
+	Handle:cvar_TeamWorkBuildingKill	= INVALID_HANDLE,
+	Handle:cvar_TeamWorkCpBlock			= INVALID_HANDLE,
+	Handle:cvar_TeamWorkExtinguish		= INVALID_HANDLE;
 
 new Handle:g_hAdminMenu 			= INVALID_HANDLE,
 	Handle:g_hScrambleVoteMenu 		= INVALID_HANDLE,
@@ -310,7 +312,9 @@ enum eTeamworkReasons
 	buildingKill,
 	placeSapper,
 	controlPointCaptured,
-	controlPointTouch
+	controlPointTouch,
+	controlPointBlock,
+	playerExtinguish
 };
 
 new e_RoundState:g_RoundState,
@@ -361,13 +365,15 @@ public OnPluginStart()
 	cvar_BalanceImmunityCheck = CreateConVar("gs_balance_checkummunity_percent", "0.0", "Percentage of players immune from auto balance to start to ignore balance immunity check", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
 	cvar_TeamWorkFlagEvent 		= CreateConVar("gs_ab_teamwork_flagevent", 		"30", "Time immunity from auto-balance to grant when a player touches/drops the ctf flag.", 	FCVAR_PLUGIN, true, 0.0, false);
-	cvar_TeamWorkUber			= CreateConVar("gs_ab_teamwork_uber_deploy", 	"30", "Time immunity from auto-balance to grant when a player becomes uberer charged.", 		FCVAR_PLUGIN, true, 0.0, false);
-	cvar_TeamWorkMedicKill		= CreateConVar("gs_ab_teamwork_kill_medic", 	"30", "Time immunity from auto-balance to grant when a player kills a charged medic.", 		FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkUber			= CreateConVar("gs_ab_teamwork_uber_deploy", 	"30", "Time immunity from auto-balance to grant when a player becomes uber charged.", 			FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkMedicKill		= CreateConVar("gs_ab_teamwork_kill_medic", 	"30", "Time immunity from auto-balance to grant when a player kills a charged medic.", 			FCVAR_PLUGIN, true, 0.0, false);
 	cvar_TeamWorkCpTouch		= CreateConVar("gs_ab_teamwork_cp_touch", 		"30", "Time immunity from auto-balance to grant when a player touches a control point.", 		FCVAR_PLUGIN, true, 0.0, false);
 	cvar_TeamWorkCpCapture		= CreateConVar("gs_ab_teamwork_cp_capture", 	"30", "Time immunity from auto-balance to grant when a player captures a control point.", 		FCVAR_PLUGIN, true, 0.0, false);
 	cvar_TeamWorkPlaceSapper	= CreateConVar("gs_ab_teamwork_sapper_place", 	"30", "Time immunity from auto-balance to grant when a spy places a sapper.", 					FCVAR_PLUGIN, true, 0.0, false);
 	cvar_TeamWorkBuildingKill	= CreateConVar("gs_ab_teamwork_building_kill", 	"30", "Time immunity from auto-balance to grant when a player destroys a building.", 			FCVAR_PLUGIN, true, 0.0, false);
-
+	cvar_TeamWorkCpBlock		= CreateConVar("gs_ab_teamwork_cp_block",		"30", "Time immunity from auto-balance to grant when a player blocks a control point.",			FCVAR_PLUGIN, true, 0.0, false);
+	cvar_TeamWorkExtinguish		= CreateConVar("gs_ab_teamwork_extinguish",		"30", "Time immunity from auto-balance to grant when a player extinguishes a team-mate.",		FCVAR_PLUGIN, true, 0.0, false);
+	
 	cvar_ImbalancePrevent	= CreateConVar("gs_prevent_spec_imbalance", "0", "If set, block changes to spectate that result in a team imbalance", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_BuddySystem		= CreateConVar("gs_use_buddy_system", "0", "Allow players to choose buddies to try to keep them on the same team", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	cvar_SelectSpectators = CreateConVar("gs_Select_spectators", "60", "During a scramble or force-balance, select spectators who have change to spectator in less time in seconds than this setting, 0 disables", FCVAR_PLUGIN, true, 0.0, false);
@@ -1206,6 +1212,8 @@ hook()
 	HookEvent("object_destroyed", 			hook_ObjectDestroyed, EventHookMode_Post);
 	HookEvent("teamplay_flag_event",		hook_FlagEvent, EventHookMode_Post);
 	HookEvent("teamplay_pre_round_time_left",			hookPreRound, EventHookMode_PostNoCopy);
+	HookEvent("teamplay_capture_blocked", Event_capture_blocked);
+	HookEvent("player_extinguished", Event_player_extinguished);
 	HookUserMessage(GetUserMessageId("TextMsg"), UserMessageHook_Class, false);
 	AddGameLogHook(LogHook);
 	
@@ -1251,8 +1259,28 @@ unHook()
 	UnhookEvent("controlpoint_endtouch", hook_EndTouch, EventHookMode_Post);
 	UnhookEvent("teamplay_timer_time_added", TimerUpdateAdd, EventHookMode_PostNoCopy);
 	UnhookEvent("teamplay_pre_round_time_left",			hookPreRound, EventHookMode_PostNoCopy);
+	UnhookEvent("teamplay_capture_blocked", Event_capture_blocked);
+	UnhookEvent("player_extinguished", Event_player_extinguished);
 
 	g_bHooked = false;
+}
+
+public Event_player_extinguished(Handle event, const char[] name, bool dontBroadcast)
+{
+	new healer = GetClientOfUserId(GetEventInt(event, "healer"));
+	new victim = GetClientOfUserId(GetEventInt(event, "victim"));
+	if (!healer || !victim)
+		return;
+	AddTeamworkTime(healer, playerExtinguish);
+}
+
+public Event_capture_blocked(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new client = GetEventInt(event, "blocker");
+	if (client && g_RoundState == normal)
+	{
+		AddTeamworkTime(client, controlPointBlock);
+	}
 }
 
 /**
@@ -1738,6 +1766,10 @@ AddTeamworkTime(client, eTeamworkReasons:reason)
 				iTime = GetConVarInt(cvar_TeamWorkCpCapture);
 			case controlPointTouch:
 				iTime = GetConVarInt(cvar_TeamWorkCpTouch);
+			case controlPointBlock:
+				iTime = GetConVarInt(cvar_TeamWorkCpBlock);
+			case playerExtinguish:
+				iTime = GetConVarInt(cvar_TeamWorkExtinguish);
 		}
 		g_aPlayers[client][iTeamworkTime] = GetTime()+iTime;
 	}
@@ -2965,28 +2997,28 @@ bool:CheckSpecChange(client)
 
 public SortIntsAsc(x[], y[], array[][], Handle:data)		// this sorts everything in the info array ascending
 {
-    if (x[1] > y[1]) 
+	if (x[1] > y[1]) 
 	{
 		return 1;
 	}
-    else if (x[1] < y[1]) 
+	else if (x[1] < y[1]) 
 	{
 		return -1;    
 	}
 	
-    return 0;
+	return 0;
 }
 
 public SortIntsDesc(x[], y[], array[][], Handle:data)		// this sorts everything in the info array descending
 {
-    if (x[1] > y[1]) 
+	if (x[1] > y[1]) 
 	{
 		return -1;
 	}
-    else if (x[1] < y[1]) 
+	else if (x[1] < y[1]) 
 	{
 		return 1;   
 	}		
 	
-    return 0;
+	return 0;
 }
