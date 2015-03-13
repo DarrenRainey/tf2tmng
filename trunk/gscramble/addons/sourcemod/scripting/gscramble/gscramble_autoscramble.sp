@@ -429,10 +429,10 @@ public Action:timer_ScrambleDelay(Handle:timer, any:data)  // scramble logic
 
 FireScrambleEvent()
 {
-/*
+
 	new Handle:event = CreateEvent("teamplay_alert");
 	SetEventInt(event, "alert_type", 0);
-	FireEvent(event);*/
+	FireEvent(event);
 }
 	
 
