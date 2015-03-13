@@ -51,11 +51,11 @@ comment these 2 lines if you want to compile without them.
 #endif
 #define REQUIRE_PLUGIN
 
-#define VERSION "3.0.31"
+#define VERSION "3.0.32"
 #define TEAM_RED 2
 #define TEAM_BLUE 3
-#define SCRAMBLE_SOUND  "vo/announcer_am_teamscramble03.wav"
-#define EVEN_SOUND		"vo/announcer_am_teamscramble01.wav"
+#define SCRAMBLE_SOUND  "vo/announcer_am_teamscramble03.mp3"
+#define EVEN_SOUND		"vo/announcer_am_teamscramble01.mp3"
 
 /**
 cvar handles
