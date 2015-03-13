@@ -37,12 +37,12 @@ Thanks r5053, it was your script that helped me understand a lot of this sql stu
 #include <clientprefs>
 #define REQUIRE_EXTENSIONS
 
-#define PLUGIN_VERSION "3.3.1"
+#define PLUGIN_VERSION "3.3.2"
 
 #define SOUND			"vo/announcer_am_killstreak0"
 #define NUMSOUNDS		9
-#define BIRTHDAY		"misc/happy_birthday.wav"
-#define FIRST_BLOOD 	"vo/announcer_am_firstblood04.wav"
+#define BIRTHDAY		"misc/happy_birthday.mp3"
+#define FIRST_BLOOD 	"vo/announcer_am_firstblood04.mp3"
 
 enum a_state
 {
@@ -366,7 +366,7 @@ public OnConfigsExecuted()
 	new String:buffer[64];
 	for (new i = 1; i<= NUMSOUNDS; i++)
 	{
-		Format(buffer, sizeof(buffer), "%s%i.wav", SOUND, i);
+		Format(buffer, sizeof(buffer), "%s%i.mp3", SOUND, i);
 		PrecacheSound(buffer, true);
 	}
 	
@@ -662,7 +662,7 @@ Orgasm(killer)
 	
 	new String:translation[32];
 	new String:sound[64];	
-	Format(sound, sizeof(sound), "%s%i.wav", SOUND, iSoundIndexes[switcher-1]);
+	Format(sound, sizeof(sound), "%s%i.mp3", SOUND, iSoundIndexes[switcher-1]);
 	Format(translation, sizeof(translation), "Hint%i", switcher);
 	if (!GetConVarBool(cvar_disableSounds))
 		EmitSoundToClient(killer, sound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL);
