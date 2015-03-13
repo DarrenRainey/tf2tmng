@@ -570,7 +570,7 @@ DoFirstBloodCheck(killer, victim)
 		GetClientName(killer, killerName, sizeof(killerName));
 		GetClientName(victim, victimName, sizeof(victimName));
 		CPrintToChatAllEx(killer, "[SM] %t", "FirstBlood", killerName, victimName);
-		if (!GetConVarBool(cvar_disableSounds))
+		if (GetConVarBool(cvar_disableSounds))
 			EmitSoundToAll(FIRST_BLOOD, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL);		
 	}
 }
@@ -641,7 +641,7 @@ Orgasm(killer)
 		if (TFClassType:TF2_GetPlayerClass(killer) != TFClass_Spy)
 		{
 			StartLooper(killer);
-			if (!GetConVarBool(cvar_disableSounds))
+			if (GetConVarBool(cvar_disableSounds))
 				EmitSoundToAll(BIRTHDAY, killer, SNDCHAN_AUTO, SNDLEVEL_NORMAL);
 		}
 	}
@@ -664,7 +664,7 @@ Orgasm(killer)
 	new String:sound[64];	
 	Format(sound, sizeof(sound), "%s%i.mp3", SOUND, iSoundIndexes[switcher-1]);
 	Format(translation, sizeof(translation), "Hint%i", switcher);
-	if (!GetConVarBool(cvar_disableSounds))
+	if (GetConVarBool(cvar_disableSounds))
 		EmitSoundToClient(killer, sound, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SNDLEVEL_NORMAL);
 	PrintHintText(killer, "%t", translation, g_aPlayers[killer][iKillStreak]);
 }
