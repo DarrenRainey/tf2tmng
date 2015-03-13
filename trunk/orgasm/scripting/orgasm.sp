@@ -41,7 +41,7 @@ Thanks r5053, it was your script that helped me understand a lot of this sql stu
 
 #define SOUND			"vo/announcer_am_killstreak0"
 #define NUMSOUNDS		9
-#define BIRTHDAY		"misc/happy_birthday.mp3"
+#define BIRTHDAY		"misc/happy_birthday.wav"
 #define FIRST_BLOOD 	"vo/announcer_am_firstblood04.mp3"
 
 enum a_state
