@@ -21,7 +21,7 @@ along with this plugin.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************
 *************************************************************************
 File Information
-$Id$
+$Id: gscramble_menu_settings.sp 173 2015-02-13 13:11:44Z brutalgoergectf@gmail.com $
 $Author$
 $Revision$
 $Date$
