@@ -21,7 +21,7 @@ along with this plugin.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************
 *************************************************************************
 File Information
-$Id$
+$Id: gscramble_autoscramble.sp 213 2015-03-13 04:00:10Z brutalgoergectf@gmail.com $
 $Author$
 $Revision$
 $Date$

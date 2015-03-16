@@ -21,7 +21,7 @@ along with this plugin.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************
 *************************************************************************
 File Information
-$Id$
+$Id: gscramble_tf2_extras.sp 189 2015-02-24 02:14:04Z brutalgoergectf@gmail.com $
 $Author$
 $Revision$
 $Date$

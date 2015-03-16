@@ -21,7 +21,7 @@ along with this plugin.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************
 *************************************************************************
 File Information
-$Id$
+$Id: gscramble_autobalance.sp 207 2015-03-11 17:54:55Z brutalgoergectf@gmail.com $
 $Author$
 $Revision$
 $Date$

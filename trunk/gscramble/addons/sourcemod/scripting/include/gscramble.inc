@@ -22,7 +22,7 @@ along with this plugin.  If not, see <http://www.gnu.org/licenses/>.
 *************************************************************************
 *************************************************************************
 File Information
-$Id$
+$Id: gscramble.inc 167 2015-02-11 08:07:10Z brutalgoergectf@gmail.com $
 $Author$
 $Revision$
 $Date$
